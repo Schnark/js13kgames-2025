@@ -9,21 +9,23 @@ var WIDTH = 50, HEIGHT = 30,
 	ACCEL = 0.0001,
 	GRAVITY = 0.0001,
 	JUMP = 0.25,
+	JUMP_TIME = 200,
+	ROTATION_MAX = 0.0007,
 	TURNING_TIME = 200;
 
-function Cat (curve, x0) {
-	this.curve0 = curve;
-	this.x0 = x0;
-	this.y0 = curve.y(x0);
-	this.curve1 = curve;
-	this.x1 = x0 - WIDTH;
-	this.y1 = curve.y(this.x1);
-
-	this.ground = curve;
+function Cat (level) {
+	this.level = level;
+	this.curve0 = level.ground;
+	this.x0 = level.start;
+	this.y0 = level.ground.y(this.x0);
+	this.curve1 = level.ground;
+	this.x1 = level.start - WIDTH;
+	this.y1 = level.ground.y(this.x1);
 
 	this.vx = 0;
 	this.vy = 0;
 	this.turning = 0;
+	this.jumpTime = 0;
 }
 
 Cat.prototype.draw = function (ctx) {
@@ -43,7 +45,120 @@ Cat.prototype.draw = function (ctx) {
 	ctx.restore();
 };
 
+Cat.prototype.followCurve = function (x, curve, dx) {
+	var xNew = x + dx, y, inside, stop = false, leave = false;
+
+	if (xNew < this.level.min) {
+		xNew = this.level.min;
+		stop = true;
+	} else if (xNew > this.level.max) {
+		xNew = this.level.max;
+		stop = true;
+	}
+
+	if (xNew < curve.min) {
+		xNew = curve.min;
+		stop = false;
+		leave = true;
+	} else if (xNew > curve.max) {
+		xNew = curve.max;
+		stop = false;
+		leave = true;
+	}
+
+	y = curve.y(xNew);
+	inside = this.level.insideBlock(xNew, y);
+	if (inside) {
+		if (dx > 0) {
+			xNew -= inside.l;
+			stop = true;
+			leave = false;
+		} else {
+			xNew += inside.r;
+			stop = true;
+			leave = false;
+		}
+		y = curve.y(xNew);
+	}
+
+	return {
+		x: xNew,
+		y: y,
+		curve: leave ? null : curve,
+		remaining: stop || leave ? 1 - Math.abs((x - xNew) / dx) : 0,
+		stop: stop
+	};
+};
+
+Cat.prototype.catchCurve = function (x, y, dx, dy, other) {
+	var xNew = x + dx, yNew = y + dy, inside, min, curve = null, hitSide = false, hitCurve = false;
+	if (xNew < this.level.min) {
+		xNew = this.level.min;
+		hitSide = true;
+	} else if (xNew > this.level.max) {
+		xNew = this.level.max;
+		hitSide = true;
+	}
+
+	inside = this.level.insideBlock(xNew, yNew);
+	if (inside) {
+		min = dx < 0 ? inside.r : inside.l;
+		if (inside.block !== other) {
+			min = Math.min(min, inside.b);
+		}
+		min = Math.min(min, inside.t);
+		if (min === inside.l) {
+			xNew -= inside.l;
+			hitSide = true;
+		} else if (min === inside.r) {
+			xNew += inside.r;
+			hitSide = true;
+		} else if (min === inside.b) {
+			yNew += inside.b;
+			hitCurve = true;
+		} else {
+			yNew -= inside.t;
+			hitCurve = true;
+			curve = inside.block;
+		}
+		if (hitSide && inside.block === other) {
+			hitCurve = true;
+			curve = inside.block;
+			yNew = curve.y(xNew);
+		}
+	}
+
+	if (yNew >= this.level.ground.y(xNew)) {
+		hitSide = false;
+		hitCurve = true;
+		curve = this.level.ground;
+		yNew = curve.y(xNew);
+	}
+
+	return {
+		x: xNew,
+		y: yNew,
+		curve: curve,
+		hitSide: hitSide,
+		hitCurve: hitCurve
+	};
+};
+
+Cat.prototype.swap = function () {
+	var x, y, curve;
+	x = this.x0;
+	y = this.y0;
+	curve = this.curve0;
+	this.x0 = this.x1;
+	this.y0 = this.y1;
+	this.curve0 = this.curve1;
+	this.x1 = x;
+	this.y1 = y;
+	this.curve1 = curve;
+};
+
 Cat.prototype.move = function (left, right, jump, dt) {
+	this.jumpTime = Math.max(0, this.jumpTime - dt);
 	if (this.turning > 0) {
 		this.turning -= dt;
 		if (this.turning >= 0) {
@@ -55,14 +170,15 @@ Cat.prototype.move = function (left, right, jump, dt) {
 	if (this.curve0 && this.curve1) {
 		this.walk(left, right, jump, dt);
 	} else if (!this.curve0 && !this.curve1) {
-		this.fly(dt);
+		this.fly(left, right, jump, dt);
 	} else {
 		this.slide(left, right, jump, dt);
 	}
 };
 
 Cat.prototype.walk = function (left, right, jump, dt) {
-	var x, y, dx, end;
+	var dx, dx1, pos0, pos1;
+	this.vy = 0;
 	if (left === right) {
 		//if neither or both keys are pressed just stop
 		this.vx = 0;
@@ -72,12 +188,7 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 			(right && this.x0 < this.x1)
 		) {
 			this.turning = TURNING_TIME;
-			x = this.x0;
-			y = this.y0;
-			this.x0 = this.x1;
-			this.y0 = this.y1;
-			this.x1 = x;
-			this.y1 = y;
+			this.swap();
 			this.vx = 0;
 			return;
 		}
@@ -90,133 +201,245 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 		}
 	}
 
-	dx = this.vx * dt;
-	if (this.x0 + dx > this.curve0.max) {
-		dx = this.curve0.max - this.x0;
-		end = 1;
-	}
-	if (this.x0 + dx < this.curve0.min) {
-		dx = this.curve0.min - this.x0;
-		end = 2;
-	}
-	if (this.x1 + dx > this.curve1.max) {
-		dx = this.curve1.max - this.x1;
-		end = 3;
-	}
-	if (this.x1 + dx < this.curve1.min) {
-		dx = this.curve1.min - this.x1;
-		end = 4;
-	}
-
-	this.x0 += dx;
-	this.y0 = this.curve0.y(this.x0);
-	this.x1 += dx;
-	this.y1 = this.curve1.y(this.x1);
-
-	if (end) {
-		switch (end) {
-		case 1:
-			if (this.curve0.closed1) {
-				this.vx = 0;
-			} else {
-				this.curve0 = null;
-				dt = dt - dx / this.vx;
-				this.slide(left, right, jump, dt);
-			}
-			break;
-		case 2:
-			if (this.curve0.closed0) {
-				this.vx = 0;
-			} else {
-				this.curve0 = null;
-				dt = dt - dx / this.vx;
-				this.slide(left, right, jump, dt);
-			}
-			break;
-		case 3:
-			if (this.curve1.closed1) {
-				this.vx = 0;
-			} else {
-				this.curve1 = null;
-				dt = dt - dx / this.vx;
-				this.slide(left, right, jump, dt);
-			}
-			break;
-		case 4:
-			if (this.curve1.closed0) {
-				this.vx = 0;
-			} else {
-				this.curve1 = null;
-				dt = dt - dx / this.vx;
-				this.slide(left, right, jump, dt);
-			}
-			break;
-		}
-	} else if (jump) {
+	this.jumpTime = 0;
+	if (jump) {
 		this.curve0 = null;
 		this.curve1 = null;
-		this.vy = -JUMP;
+		this.jumpTime = JUMP_TIME;
+		this.fly(left, right, jump, dt);
+		return;
+	}
+
+	dx = this.vx * dt;
+	//adjust to keep WIDTH
+	if (this.x0 > this.x1) {
+		dx1 = this.x0 - this.x1 + dx - WIDTH;
+	} else {
+		dx1 = this.x0 - this.x1 + dx + WIDTH;
+	}
+	if (dx > 0) {
+		dx1 = Math.min(dx1, 1.5 * dx);
+		dx1 = Math.max(dx1, 0.5 * dx);
+	} else {
+		dx1 = Math.max(dx1, 1.5 * dx);
+		dx1 = Math.min(dx1, 0.5 * dx);
+	}
+	pos0 = this.followCurve(this.x0, this.curve0, dx);
+	pos1 = this.followCurve(this.x1, this.curve1, dx1);
+	if (pos0.remaining || pos1.remaining) {
+		if (pos0.remaining < pos1.remaining) {
+			pos0 = this.followCurve(this.x0, this.curve0, dx * (1 - pos1.remaining));
+		} else {
+			pos1 = this.followCurve(this.x1, this.curve1, dx1 * (1 - pos0.remaining));
+		}
+	}
+	this.x0 = pos0.x;
+	this.y0 = pos0.y;
+	this.curve0 = pos0.curve;
+	this.x1 = pos1.x;
+	this.y1 = pos1.y;
+	this.curve1 = pos1.curve;
+	if (pos0.stop || pos1.stop) {
+		this.vx = 0;
+	} else if (pos0.remaining) {
+		this.jumpTime = JUMP_TIME;
+		if (!this.curve0 && !this.curve1) {
+			this.fly(left, right, jump, dt * pos0.remaining);
+		} else {
+			this.slide(left, right, jump, dt * pos0.remaining);
+		}
 	}
 };
 
 Cat.prototype.slide = function (left, right, jump, dt) {
-	var dy, y;
+	var swap, dx, dy, pos;
+	if (jump) {
+		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
+		this.vy -= JUMP * Math.min(dt, this.jumpTime) / JUMP_TIME;
+		this.vy = Math.max(this.vy, -1.5 * JUMP);
+	}
 	this.vy += GRAVITY * dt;
 	this.vy = Math.min(this.vy, VY_MAX);
-	dy = this.vy * dt;
+	if (left === right || (left && this.vx > 0) || (right && this.vx < 0)) {
+		this.vx = 0;
+	} else if (left) {
+		this.vx -= ACCEL * dt;
+		this.vx = Math.max(this.vx, this.x0 > this.x1 ? -VX_MAX / 2 : -VX_MAX);
+	} else if (right) {
+		this.vx += ACCEL * dt;
+		this.vx = Math.min(this.vx, this.x0 > this.x1 ? VX_MAX : VX_MAX / 2);
+	}
+
+	if (this.vy < 0) {
+		this.curve0 = null;
+		this.curve1 = null;
+		this.fly(false, false, false, dt); //set inputs to false, already handled above
+		return;
+	}
+
+	if (Math.abs(this.y0 - this.y1) > WIDTH * 0.75) {
+		this.vx = 0;
+	}
+
 	if (!this.curve0) {
-		this.y0 += dy;
-		if (this.x0 >= this.ground.min && this.x0 <= this.ground.max) {
-			y = this.ground.y(this.x0);
-			if (this.y0 >= y) {
-				this.y0 = y;
-				this.curve0 = this.ground;
+		swap = true;
+		this.swap();
+	}
+
+	dx = this.vx * dt;
+	dy = this.vy * dt;
+
+	//make sure that Math.abs(this.y0 - this.y1) <= WIDTH
+	dy = Math.min(dy, Math.max(0, this.y0 - this.y1 + WIDTH));
+	dy = Math.max(dy, Math.min(0, this.y0 - this.y1 - WIDTH));
+
+	pos = this.catchCurve(this.x1, this.y1, dx, dy, this.curve0);
+	if (pos.x === this.x0) {
+		//make sure we never get this.x0 === this.x1
+		if (this.x1 > this.x0) {
+			pos.x += 0.01;
+		} else {
+			pos.x -= 0.01;
+		}
+	}
+	this.x1 = pos.x;
+	this.y1 = pos.y;
+	if (pos.hitSide) {
+		this.vx = 0;
+	}
+	if (pos.hitCurve) {
+		this.vy = 0;
+	}
+
+	if (pos.curve) {
+		this.curve1 = pos.curve;
+	} else {
+		//move x0 to adjust width
+		if (Math.abs(this.y0 - this.y1) <= WIDTH) {
+			dx = this.x1 - this.x0 +
+				(this.x0 > this.x1 ? 1 : -1) * Math.sqrt(WIDTH * WIDTH - (this.y0 - this.y1) * (this.y0 - this.y1));
+		} else {
+			dx = this.x1 - this.x0;
+		}
+		pos = this.followCurve(this.x0, this.curve0, dx);
+		if (pos.x === this.x1) {
+			//make sure we never get this.x0 === this.x1
+			if (this.x1 > this.x0) {
+				this.x1 += 0.01;
+			} else {
+				this.x1 -= 0.01;
+			}
+			this.vx = (pos.x - this.x1) / dt;
+		}
+		this.x0 = pos.x;
+		this.y0 = pos.y;
+		this.curve0 = pos.curve;
+		if (pos.stop) {
+			this.vx = 0;
+			if (this.x0 > this.x1) {
+				dx = this.x0 - this.x1 - WIDTH;
+			} else {
+				dx = this.x0 - this.x1 + WIDTH;
+			}
+			pos = this.catchCurve(this.x1, this.y1, dx, 0, this.curve0);
+			if (pos.x === this.x0) {
+				//make sure we never get this.x0 === this.x1
+				if (this.x1 > this.x0) {
+					pos.x += 0.01;
+				} else {
+					pos.x -= 0.01;
+				}
+			}
+			this.x1 = pos.x;
+			this.y1 = pos.y;
+			if (pos.hitSide) {
+				this.vx = 0;
+			}
+			if (pos.hitCurve) {
+				this.vy = 0;
+			}
+			if (pos.curve) {
+				this.curve1 = pos.curve;
 			}
 		}
 	}
-	if (!this.curve1) {
-		this.y1 += dy;
-		if (this.x1 >= this.ground.min && this.x1 <= this.ground.max) {
-			y = this.ground.y(this.x1);
-			if (this.y1 >= y) {
-				this.y1 = y;
-				this.curve1 = this.ground;
-			}
-		}
+
+	if (swap) {
+		this.swap();
 	}
 };
 
-Cat.prototype.fly = function (dt) {
-	var dx, dy, y;
+Cat.prototype.fly = function (left, right, jump, dt) {
+	var dx, dy, a, da, sina, cosa, x, y, pos;
+	//TODO also allow moving a bit if this.jumpTime === 0?
+	if (left) {
+		this.vx -= ACCEL * Math.min(dt, this.jumpTime);
+		this.vx = Math.max(this.vx, this.x0 > this.x1 ? -VX_MAX / 2 : -VX_MAX);
+	} else if (right) {
+		this.vx += ACCEL * Math.min(dt, this.jumpTime);
+		this.vx = Math.min(this.vx, this.x0 > this.x1 ? VX_MAX : VX_MAX / 2);
+	}
+	if (jump) {
+		this.vy -= JUMP * Math.min(dt, this.jumpTime) / JUMP_TIME;
+	}
 	this.vy += GRAVITY * dt;
 	this.vy = Math.min(this.vy, VY_MAX);
 	dx = this.vx * dt;
 	dy = this.vy * dt;
-	this.x0 += dx;
-	this.y0 += dy;
-	this.x1 += dx;
-	this.y1 += dy;
-	//TODO
 	//rotate while jumping
-	//if we hit something from below then stop before it and set vy = 0
+	a = Math.atan2(this.y0 - this.y1, Math.abs(this.x0 - this.x1));
+	da = (Math.atan2(dy, Math.abs(dx)) - a) % (2 * Math.PI);
+	if (this.x0 < this.x1) {
+		da = -da;
+	}
+	da = Math.min(Math.abs(dy) / WIDTH, dt * ROTATION_MAX, da);
+	da = Math.max(-Math.abs(dy) / WIDTH, -dt * ROTATION_MAX, da);
+	sina = Math.sin(da);
+	cosa = Math.cos(da) - 1;
+	x = (this.x0 + this.x1) / 2;
+	y = (this.y0 + this.y1) / 2;
 
-	if (this.x0 >= this.ground.min && this.x0 <= this.ground.max) {
-		y = this.ground.y(this.x0);
-		if (this.y0 >= y) {
-			this.y0 = y;
-			this.curve0 = this.ground;
-			this.vx = 0; //TODO?
+	pos = this.catchCurve(
+		this.x0, this.y0,
+		dx + (this.x0 - x) * cosa - (this.y0 - y) * sina,
+		dy + (this.x0 - x) * sina + (this.y0 - y) * cosa
+	);
+	this.x0 = pos.x;
+	this.y0 = pos.y;
+	this.curve0 = pos.curve;
+	if (pos.hitSide) {
+		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
+		this.vx = 0;
+	}
+	if (pos.hitCurve) {
+		this.vy = 0;
+	}
+	pos = this.catchCurve(
+		this.x1, this.y1,
+		dx + (this.x1 - x) * cosa - (this.y1 - y) * sina,
+		dy + (this.x1 - x) * sina + (this.y1 - y) * cosa
+	);
+	if (pos.x === this.x0) {
+		//make sure we never get this.x0 === this.x1
+		if (this.x1 > this.x0) {
+			pos.x += 0.01;
+		} else {
+			pos.x -= 0.01;
 		}
 	}
-	if (this.x1 >= this.ground.min && this.x1 <= this.ground.max) {
-		y = this.ground.y(this.x1);
-		if (this.y1 >= y) {
-			this.y1 = y;
-			this.curve1 = this.ground;
-			this.vx = 0; //TODO?
-		}
+	this.x1 = pos.x;
+	this.y1 = pos.y;
+	this.curve1 = pos.curve;
+	if (pos.hitSide) {
+		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
+		this.vx = 0;
 	}
-	//TODO? apply slide for rest time
+	if (pos.hitCurve) {
+		this.vy = 0;
+	}
+	if (this.curve0 && this.curve1) {
+		this.vx = 0;
+	}
 };
 
 return Cat;

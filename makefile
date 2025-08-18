@@ -1,5 +1,5 @@
-JS = res/curve.js res/cat.js res/game.js
-GLOBAL = Curve, Cat
+JS = res/curve.js res/block.js res/level.js res/cat.js res/keys.js res/game.js
+GLOBAL = Curve, Block, Level, Cat, keys
 
 .PHONY: check
 check: min/game.zip

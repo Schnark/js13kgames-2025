@@ -3,12 +3,12 @@ Cat =
 (function () {
 "use strict";
 
-var WIDTH = 50, HEIGHT = 30,
-	VX_MAX = 0.1,
-	VY_MAX = 0.1,
-	ACCEL = 0.0001,
-	GRAVITY = 0.0001,
-	JUMP = 0.25,
+var WIDTH = 100, HEIGHT = 60,
+	VX_MAX = 0.2,
+	VY_MAX = 0.2,
+	ACCEL = 0.0002,
+	GRAVITY = 0.0002,
+	JUMP = 0.5,
 	JUMP_TIME = 200,
 	ROTATION_MAX = 0.0007,
 	TURNING_TIME = 200;
@@ -41,7 +41,7 @@ Cat.prototype.draw = function (ctx) {
 	ctx.fillStyle = '#000';
 	ctx.fillRect(0, -HEIGHT, Math.sqrt(dx * dx + dy * dy), HEIGHT);
 	ctx.fillStyle = '#ff0';
-	ctx.fillRect(WIDTH - 10, 10 - HEIGHT, 5, 5);
+	ctx.fillRect(WIDTH - 20, 20 - HEIGHT, 10, 10);
 	ctx.restore();
 };
 

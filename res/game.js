@@ -5,14 +5,14 @@
 var canvas, ctx, rAF, ground, block, level, cat, t0;
 
 canvas = document.getElementById('c');
-canvas.width = 800;
-canvas.height = 400;
+canvas.width = 1000;
+canvas.height = 600; //must be nominal height of level
 ctx = canvas.getContext('2d', {alpha: false});
 rAF = window.requestAnimationFrame || window.mozRequestAnimationFrame;
 
-ground = new Curve([{x: 0, y: 350}, {x: 100, y: 370}, {x: 200, y: 350}, {x: 400, y: 340}, {x: 600, y: 300}, {x: 700, y: 350}, {x: 800, y: 350}]);
-block = new Block(new Curve([{x: 300, y: 180}, {x: 400, y: 150}, {x: 500, y: 170}]), new Curve([{x: 300, y: 200}, {x: 500, y: 200}]));
-level = new Level(ground, [block], 120);
+ground = new Curve([{x: 0, y: 500}, {x: 200, y: 540}, {x: 400, y: 500}, {x: 800, y: 480}, {x: 1200, y: 400}, {x: 1400, y: 500}, {x: 1600, y: 500}]);
+block = new Block(new Curve([{x: 600, y: 160}, {x: 800, y: 100}, {x: 1000, y: 140}]), new Curve([{x: 600, y: 200}, {x: 1000, y: 200}]));
+level = new Level(ground, [block], 240);
 cat = new Cat(level);
 
 function loop (t) {

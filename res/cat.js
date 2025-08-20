@@ -1,9 +1,10 @@
 /*global Cat: true*/
+/*global drawCat*/
 Cat =
 (function () {
 "use strict";
 
-var WIDTH = 100, HEIGHT = 60,
+var WIDTH = 100,
 	VX_MAX = 0.2,
 	VY_MAX = 0.2,
 	ACCEL = 0.0002,
@@ -26,22 +27,22 @@ function Cat (level) {
 	this.vy = 0;
 	this.turning = 0;
 	this.jumpTime = 0;
+	this.variationTime = 0;
+	this.walkPos = 0;
 }
 
 Cat.prototype.draw = function (ctx) {
-	var dx, dy;
+	var dx, dy, a;
 	dx = this.x0 - this.x1;
 	dy = this.y0 - this.y1;
 	ctx.save();
 	ctx.translate(this.x1, this.y1);
-	ctx.rotate(Math.atan2(dy, dx));
+	a = Math.atan2(dy, dx);
+	ctx.rotate(a);
 	if (dx < 0) {
 		ctx.scale(1, -1);
 	}
-	ctx.fillStyle = '#000';
-	ctx.fillRect(0, -HEIGHT, Math.sqrt(dx * dx + dy * dy), HEIGHT);
-	ctx.fillStyle = '#ff0';
-	ctx.fillRect(WIDTH - 20, 20 - HEIGHT, 10, 10);
+	drawCat(ctx, Math.sqrt(dx * dx + dy * dy), -a, this.walkPos / 100, this.variationTime / 1000, this.turning / TURNING_TIME);
 	ctx.restore();
 };
 
@@ -158,6 +159,7 @@ Cat.prototype.swap = function () {
 };
 
 Cat.prototype.move = function (left, right, jump, dt) {
+	this.variationTime += dt;
 	this.jumpTime = Math.max(0, this.jumpTime - dt);
 	if (this.turning > 0) {
 		this.turning -= dt;
@@ -174,6 +176,7 @@ Cat.prototype.move = function (left, right, jump, dt) {
 	} else {
 		this.slide(left, right, jump, dt);
 	}
+	return this.level.getEnd(this.x0, this.y0) || this.level.getEnd(this.x1, this.y1);
 };
 
 Cat.prototype.walk = function (left, right, jump, dt) {
@@ -233,6 +236,7 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 			pos1 = this.followCurve(this.x1, this.curve1, dx1 * (1 - pos0.remaining));
 		}
 	}
+	this.walkPos += Math.abs(pos0.x - this.x0);
 	this.x0 = pos0.x;
 	this.y0 = pos0.y;
 	this.curve0 = pos0.curve;
@@ -331,6 +335,7 @@ Cat.prototype.slide = function (left, right, jump, dt) {
 			}
 			this.vx = (pos.x - this.x1) / dt;
 		}
+		this.walkPos += Math.abs(pos.x - this.x0);
 		this.x0 = pos.x;
 		this.y0 = pos.y;
 		this.curve0 = pos.curve;

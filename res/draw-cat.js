@@ -3,34 +3,52 @@ drawCat =
 (function () {
 "use strict";
 
-function drawCatPlaceholder (ctx, l) {
-	ctx.fillStyle = '#000';
-	ctx.fillRect(0, -60, l, 60);
-	ctx.fillStyle = '#ff0';
-	ctx.fillRect(l - 20, -40, 10, 10);
+function drawTurningCat (ctx, l, a, w, v, t) {
+	ctx.save();
+	ctx.beginPath();
+	ctx.rect(0, -80, 2 * l, 100);
+	ctx.clip();
+	ctx.save();
+	ctx.scale(-1, 1);
+	ctx.translate(-t * l, 0);
+	drawCat(ctx, l, a, w - t, v);
+	ctx.restore();
+	ctx.translate(-t * l, 0);
+	drawCat(ctx, l, a, w - t, v);
+	ctx.restore();
 }
 
-function drawCat (ctx, l, a, w, v) {
+function drawCat (ctx, l, a, w, v, t) {
 	var xb0, yb0, xb1, yb1, xb2, yb2, xb3, yb3, //body
 		xbc0, ybc0, xbc1, ybc1, xbc2, ybc2, xbc3, ybc3,
 		xt, yt, //tail
 		xtc0, ytc0, xtc1, ytc1,
 		xf0, yf0, xf1, yf1, xf2, yf2, xf3, yf3, //feet
+		xfc0, yfc0, xfc1, yfc1, xfc2, yfc2, xfc3, yfc3,
 		m;
 
-	xb0 = 25 + 25 * Math.sin(a);
+	function loop (min, max, p) {
+		return min + (max - min) * (1 + Math.sin(2 * Math.PI * p)) / 2;
+	}
+
+	if (t) {
+		drawTurningCat(ctx, l, a, w, v, t);
+		return;
+	}
+
+	xb0 = 25 + 20 * Math.sin(a);
 	yb0 = -40;
-	xb1 = l - 25 + 25 * Math.sin(a);
+	xb1 = l - 25 + 20 * Math.sin(a);
 	yb1 = -40;
 	xb2 = xb1 + 5;
 	yb2 = -17;
 	xb3 = xb0 - 5;
 	yb3 = -17;
-	xbc0 = (xb0 + xb1) / 2;
+	xbc0 = (xb0 + xb1) / 2 + l / 10;
 	ybc0 = (yb0 + yb1) / 2 + 2 * Math.sin(2 * Math.PI * v) + Math.min(0, l - 100);
 	xbc1 = (xb1 + xb2) / 2 + 2 + Math.sin(6 * v);
 	ybc1 = (yb1 + yb2) / 2;
-	xbc2 = xbc0;
+	xbc2 = xbc0 - l / 5;
 	ybc2 = ybc0 + 23;
 	xbc3 = (xb3 + xb0) / 2 - 2 - Math.sin(6 * v);
 	ybc3 = (yb3 + yb0) / 2;
@@ -43,20 +61,29 @@ function drawCat (ctx, l, a, w, v) {
 	xtc1 = xt + 10;
 	ytc1 = yt - 10;
 
-	xf0 = 0;
-	yf0 = 0;
-	xf1 = xb3;
-	yf1 = 0;
-	xf2 = xb2;
-	yf2 = 0;
-	xf3 = l;
-	yf3 = 0;
+	xf0 = loop(0, xb3 + 5, w);
+	yf0 = Math.min(0, loop(-5, 5, w + 0.75));
+	xf1 = loop(0, xb3 + 5, w + 0.5);
+	yf1 = Math.min(0, loop(-5, 5, w + 0.25));
+	xf2 = loop(xb2 - 5, l, w + 0.25);
+	yf2 = Math.min(0, loop(-5, 5, w));
+	xf3 = loop(xb2 - 5, l, w + 0.75);
+	yf3 = Math.min(0, loop(-5, 5, w + 0.5));
+	xfc0 = loop(xb3 * 0.7, xb3 + 10, w);
+	yfc0 = -8;
+	xfc1 = loop(xb3 * 0.7, xb3 + 10, w + 0.5);
+	yfc1 = -8;
+	xfc2 = loop(xb2, xb2 * 0.3 + l * 0.7, w + 0.25);
+	yfc2 = -8;
+	xfc3 = loop(xb2, xb2 * 0.3 + l * 0.7, w + 0.75);
+	yfc3 = -8;
 
 	ctx.save();
 	ctx.fillStyle = '#000';
 	ctx.strokeStyle = '#000';
 	ctx.lineWidth = 7;
 	ctx.lineCap = 'round';
+	ctx.lineJoin = 'round';
 
 	ctx.beginPath();
 	ctx.moveTo(xb0, yb0);
@@ -72,25 +99,35 @@ function drawCat (ctx, l, a, w, v) {
 	ctx.bezierCurveTo(xtc0, ytc0, xtc1, ytc1, xt, yt);
 
 	ctx.moveTo(xb3, yb3);
-	ctx.lineTo(xf0, yf0);
+	ctx.quadraticCurveTo(xfc0, yfc0, xf0, yf0);
+	ctx.lineTo(xf0 + 2, yf0);
 	ctx.moveTo(xb3, yb3);
-	ctx.lineTo(xf1, yf1);
+	ctx.quadraticCurveTo(xfc1, yfc1, xf1, yf1);
+	ctx.lineTo(xf1 + 3, yf1);
 	ctx.moveTo(xb2, yb2);
-	ctx.lineTo(xf2, yf2);
+	ctx.quadraticCurveTo(xfc2, yfc2, xf2, yf2);
+	ctx.lineTo(xf2 + 2, yf2);
 	ctx.moveTo(xb2, yb2);
-	ctx.lineTo(xf3, yf3);
+	ctx.quadraticCurveTo(xfc3, yfc3, xf3, yf3);
+	ctx.lineTo(xf3 + 3, yf3);
 	ctx.stroke();
 
 	ctx.translate(xb1 - 5, yb1 + 10);
 	ctx.rotate(0.2 * Math.sin(v) - 0.4 * Math.sin(a));
 
 	ctx.beginPath();
-	ctx.arc(15, -15, 15, 0, 2 * Math.PI);
+	ctx.moveTo(-5, -12);
+	ctx.bezierCurveTo(10, -12, 5, -25, 15, -25);
+	ctx.bezierCurveTo(25, -25, 30, -20, 30, -15);
+	ctx.bezierCurveTo(30, -5, 10, -5, 5, 5);
+	ctx.moveTo(9, -20);
+	ctx.lineTo(15 + 2 * Math.sin(1.5 * v), -30);
+	ctx.lineTo(22, -20);
 	ctx.fill();
 
 	ctx.fillStyle = '#ff0';
 	ctx.beginPath();
-	ctx.arc(20, -17, 2.5, 0, 2 * Math.PI);
+	ctx.arc(20, -17, 2, 0, 2 * Math.PI);
 	ctx.fill();
 
 	ctx.restore();

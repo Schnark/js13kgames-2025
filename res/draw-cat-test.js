@@ -8,26 +8,27 @@ var canvas = document.getElementById('c'),
 		length: document.getElementById('length'),
 		angle: document.getElementById('angle'),
 		walk: document.getElementById('walk'),
-		vary: document.getElementById('vary')
+		vary: document.getElementById('vary'),
+		turn: document.getElementById('turn')
 	},
 	rAF = window.requestAnimationFrame || window.mozRequestAnimationFrame,
 	t0;
 
-function testCat (l, a, w, v) {
+function testCat (l, a, w, v, turn) {
 	ctx.fillStyle = '#88f';
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	ctx.fillStyle = '#080';
 	ctx.fillRect(0, canvas.height - 10, canvas.width, 10);
 	ctx.save();
 	ctx.translate(10, 70);
-	drawCat(ctx, l, a, w, v);
+	drawCat(ctx, l, a, w, v, turn);
 	ctx.strokeStyle = '#f00';
 	ctx.strokeRect(0, -60, l, 60);
 	ctx.restore();
 }
 
 function loop (t) {
-	var dt, l, a, w, v;
+	var dt, l, a, w, turn, v;
 	if (!t0) {
 		t0 = t;
 	}
@@ -52,7 +53,12 @@ function loop (t) {
 	} else {
 		v = 0;
 	}
-	testCat(l, a, w, v);
+	if (inputs.turn.checked) {
+		turn = 1 - (dt / 1000) % 1;
+	} else {
+		turn = 0;
+	}
+	testCat(l, a, w, v, turn);
 	rAF(loop);
 }
 

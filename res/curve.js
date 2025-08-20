@@ -30,9 +30,9 @@ Curve.prototype.pathBottom = function (ctx) {
 	(2) from right to left
 	(3) with visual offset to top to accommodate for height of cat*/
 	var i, l = this.points.length;
-	ctx.moveTo(this.points[l - 1].x, this.points[l - 1].y - 10);
+	ctx.moveTo(this.points[l - 1].x, this.points[l - 1].y - 30);
 	for (i = l - 2; i >= 0; i--) {
-		ctx.lineTo(this.points[i].x, this.points[i].y - 10);
+		ctx.lineTo(this.points[i].x, this.points[i].y - 30);
 	}
 };
 

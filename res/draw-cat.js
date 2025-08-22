@@ -36,14 +36,14 @@ function drawCat (ctx, l, a, w, v, t) {
 		return;
 	}
 
-	xb0 = 25 + 20 * Math.sin(a);
-	yb0 = -40;
-	xb1 = l - 25 + 20 * Math.sin(a);
-	yb1 = -40;
+	xb0 = 22 + 17 * Math.sin(a);
+	yb0 = -38;
+	xb1 = l - 22 + 17 * Math.sin(a);
+	yb1 = -41;
 	xb2 = xb1 + 5;
 	yb2 = -17;
 	xb3 = xb0 - 5;
-	yb3 = -17;
+	yb3 = -16;
 	xbc0 = (xb0 + xb1) / 2 + l / 10;
 	ybc0 = (yb0 + yb1) / 2 + 2 * Math.sin(2 * Math.PI * v) + Math.min(0, l - 100);
 	xbc1 = (xb1 + xb2) / 2 + 2 + Math.sin(6 * v);
@@ -101,15 +101,23 @@ function drawCat (ctx, l, a, w, v, t) {
 	ctx.moveTo(xb3, yb3);
 	ctx.quadraticCurveTo(xfc0, yfc0, xf0, yf0);
 	ctx.lineTo(xf0 + 2, yf0);
+	ctx.moveTo(xb3 + 4, yb3);
+	ctx.quadraticCurveTo(xfc0, yfc0, xf0, yf0);
 	ctx.moveTo(xb3, yb3);
 	ctx.quadraticCurveTo(xfc1, yfc1, xf1, yf1);
 	ctx.lineTo(xf1 + 3, yf1);
+	ctx.moveTo(xb3 + 4, yb3);
+	ctx.quadraticCurveTo(xfc1, yfc1, xf1, yf1);
 	ctx.moveTo(xb2, yb2);
 	ctx.quadraticCurveTo(xfc2, yfc2, xf2, yf2);
 	ctx.lineTo(xf2 + 2, yf2);
+	ctx.moveTo(xb2 - 4, yb2);
+	ctx.quadraticCurveTo(xfc2, yfc2, xf2, yf2);
 	ctx.moveTo(xb2, yb2);
 	ctx.quadraticCurveTo(xfc3, yfc3, xf3, yf3);
 	ctx.lineTo(xf3 + 3, yf3);
+	ctx.moveTo(xb2 - 4, yb2);
+	ctx.quadraticCurveTo(xfc3, yfc3, xf3, yf3);
 	ctx.stroke();
 
 	ctx.translate(xb1 - 5, yb1 + 10);
@@ -117,9 +125,9 @@ function drawCat (ctx, l, a, w, v, t) {
 
 	ctx.beginPath();
 	ctx.moveTo(-5, -12);
-	ctx.bezierCurveTo(10, -12, 5, -25, 15, -25);
-	ctx.bezierCurveTo(25, -25, 30, -20, 30, -15);
-	ctx.bezierCurveTo(30, -5, 10, -5, 5, 5);
+	ctx.bezierCurveTo(10, -12, 5, -26, 15, -26);
+	ctx.bezierCurveTo(25, -26, 28, -18, 28, -15);
+	ctx.bezierCurveTo(28, -8, 10, -10, 5, 10);
 	ctx.moveTo(9, -20);
 	ctx.lineTo(15 + 2 * Math.sin(1.5 * v), -30);
 	ctx.lineTo(22, -20);

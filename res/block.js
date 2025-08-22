@@ -26,6 +26,11 @@ Block.prototype.path = function (ctx) {
 	ctx.closePath();
 };
 
+Block.prototype.thornyPath = function (ctx) {
+	//TODO
+	this.path(ctx);
+};
+
 Block.prototype.y = function (x) {
 	return this.top.y(x);
 };

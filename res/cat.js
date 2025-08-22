@@ -9,7 +9,7 @@ var WIDTH = 100,
 	VY_MAX = 0.2,
 	ACCEL = 0.0002,
 	GRAVITY = 0.0002,
-	JUMP = 0.5,
+	JUMP = 0.375,
 	JUMP_TIME = 200,
 	ROTATION_MAX = 0.0007,
 	TURNING_TIME = 200;
@@ -17,10 +17,10 @@ var WIDTH = 100,
 function Cat (level) {
 	this.level = level;
 	this.curve0 = level.ground;
-	this.x0 = level.start;
+	this.x0 = 140 + WIDTH;
 	this.y0 = level.ground.y(this.x0);
 	this.curve1 = level.ground;
-	this.x1 = level.start - WIDTH;
+	this.x1 = 140;
 	this.y1 = level.ground.y(this.x1);
 
 	this.vx = 0;
@@ -176,12 +176,13 @@ Cat.prototype.move = function (left, right, jump, dt) {
 	} else {
 		this.slide(left, right, jump, dt);
 	}
-	return this.level.getEnd(this.x0, this.y0) || this.level.getEnd(this.x1, this.y1);
+	return this.level.getEnd(this.x0, this.y0) ||
+		this.level.getEnd(this.x1, this.y1) ||
+		this.level.getDroneEnd((this.x0 + this.x1) / 2, (this.y0 + this.y1) / 2);
 };
 
 Cat.prototype.walk = function (left, right, jump, dt) {
 	var dx, dx1, pos0, pos1;
-	this.vy = 0;
 	if (left === right) {
 		//if neither or both keys are pressed just stop
 		this.vx = 0;
@@ -203,6 +204,7 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 			this.vx = Math.min(this.vx, VX_MAX);
 		}
 	}
+	this.vy = this.vx * (this.y1 - this.y0) / (this.x1 - this.x0);
 
 	this.jumpTime = 0;
 	if (jump) {
@@ -415,6 +417,7 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	if (pos.hitSide) {
 		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
 		this.vx = 0;
+		this.walkPos += dt * Math.abs(this.vy);
 	}
 	if (pos.hitCurve) {
 		this.vy = 0;

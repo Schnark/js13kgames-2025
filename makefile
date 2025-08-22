@@ -1,5 +1,6 @@
-JS = res/curve.js res/block.js res/level.js res/draw-cat.js res/cat.js res/keys.js res/game.js
-GLOBAL = Curve, Block, Level, drawCat, Cat, keys
+JS = res/canvas.js res/curve.js res/block.js res/drone.js res/level.js res/draw-cat.js res/cat.js res/keys.js res/game.js
+DEV_JS = res/draw-cat-test.js
+GLOBAL = Canvas, Curve, Block, Drone, Level, drawCat, Cat, keys
 
 .PHONY: check
 check: min/game.zip
@@ -29,5 +30,5 @@ clean:
 
 .PHONY: lint
 lint:
-	jshint -a $(JS) res/draw-cat-test.js
-	jscs -a $(JS) res/draw-cat-test.js
+	jshint -a $(JS) $(DEV_JS)
+	jscs -a $(JS) $(DEV_JS)

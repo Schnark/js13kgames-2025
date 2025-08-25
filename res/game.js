@@ -1,37 +1,67 @@
-/*global Canvas, Curve, Block, Level*/
+/*global Canvas, levels*/
 (function () {
 "use strict";
 
-var canvas, ground, block, thornyBush, river, level;
+var canvas, state, msgs, hints, hintsForLevels;
 
 canvas = new Canvas(document.getElementById('c'), 700, 700, 1400); //first 700 = nominal height of level
 
-ground = new Curve([{x: 0, y: 600}, {x: 200, y: 640}, {x: 400, y: 600}, {x: 800, y: 580}, {x: 1200, y: 500}, {x: 1400, y: 600}, {x: 2500, y: 600}]);
-block = new Block(new Curve([{x: 600, y: 280}, {x: 800, y: 220}, {x: 1000, y: 260}]), new Curve([{x: 600, y: 340}, {x: 1000, y: 340}]));
-thornyBush = new Block(new Curve([{x: 700, y: 550}, {x: 900, y: 550}]), new Curve([{x: 700, y: 650}, {x: 900, y: 650}]));
-river = new Block(new Curve([{x: 1400, y: 599}, {x: 1500, y: 599}]), new Curve([{x: 1400, y: 650}, {x: 1500, y: 650}]));
-level = new Level(ground, [block], [thornyBush], [river], [1950], [[1750, 2150]]);
+state = {
+	level: 0,
+	deaths: 0,
+	hints: [-1]
+};
 
-function onEnd (end) {
-	//TODO set text earlier
-	switch (end) {
-	case 1:
-		canvas.setText('You die after falling into a thorny bush.');
-		break;
-	case 2:
-		canvas.setText('You die after falling into a river.');
-		break;
-	case 3:
-		canvas.setText('You die after a drone shot you.');
-		break;
-	case -1:
-		canvas.setText('You win!');
+msgs = ['Level 1', 'Level 2'];
+hints = ['', 'You die after a drone shot you.', 'You die after falling into a thorny bush.', 'You die after falling into a river.'];
+hintsForLevels = [[1, 2, 3], [-1]];
+
+levels[1] = levels[0];
+
+function onMsg (msg) {
+	var showMsg = false;
+	if (state.hints.indexOf(msg) === -1) {
+		state.hints.push(msg);
+		showMsg = true;
 	}
-	if (end !== -1) {
-		level.run(canvas, onEnd);
+	if (hintsForLevels[state.level].indexOf(msg) > -1) {
+		showMsg = true;
+	}
+	if (showMsg) {
+		if (msg === -1) {
+			hints[msg] = 'You win after ' + state.deaths + ' deaths!';
+		}
+		canvas.setText(hints[msg]);
 	}
 }
 
-level.run(canvas, onEnd);
+function playLevel (n, callback) {
+	var level = levels[n];
+
+	function onEnd (end) {
+		if (end !== -1) {
+			state.deaths++;
+			level.run(canvas, onMsg, onEnd);
+		} else {
+			callback();
+		}
+	}
+
+	canvas.setText(msgs[n]);
+	state.level = n;
+	level.run(canvas, onMsg, onEnd);
+}
+
+function playLevels (n, callback) {
+	if (n === levels.length) {
+		callback();
+	} else {
+		playLevel(n, function () {
+			playLevels(n + 1, callback);
+		});
+	}
+}
+
+playLevels(state.level, function () {});
 
 })();

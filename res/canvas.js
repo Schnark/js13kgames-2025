@@ -48,6 +48,16 @@ Canvas.prototype.fade = function (p) {
 	this.ctx.fillRect(0, 0, this.w, this.h);
 };
 
+Canvas.prototype.blockPaths = function (blocks, min, max, time) {
+	var i;
+	for (i = 0; i < blocks.length; i++) {
+		if (blocks[i].min > max || blocks[i].max < min) {
+			continue;
+		}
+		blocks[i].path(this.ctx, time);
+	}
+};
+
 Canvas.prototype.setText = function (text) {
 	this.text = text;
 };

@@ -5,21 +5,23 @@ Level =
 "use strict";
 
 var SKY = '#004',
-	HILL = '#8f8',
-	GRASS = '#040',
-	WOOD = '#620',
-	THORNS = '#800',
-	WATER = '#00a',
+	MOON = '#aa8',
+	HILL = '#688',
+	GRASS = '#010',
+	WOOD = '#100',
+	THORNS = '#300',
+	WATER = '#003',
 	SHADOW = '#111';
 
-function Level (ground, blocks, thorns, rivers, shadows, drones) {
-	var hillData = [], x, y;
+function Level (ground, blocks, drones, shadows) {
+	var hillData = [], x, y, i;
 	this.ground = ground;
-	this.blocks = blocks;
-	this.thorns = thorns;
-	this.rivers = rivers;
-	this.shadows = shadows;
-	this.droneData = drones;
+	this.blocks = [[], [], [], []];
+	for (i = 0; i < blocks.length; i++) {
+		this.blocks[blocks[i].type].push(blocks[i]);
+	}
+	this.droneData = drones || [];
+	this.shadows = shadows || [];
 	this.min = ground.min;
 	this.max = ground.max;
 
@@ -34,7 +36,7 @@ function Level (ground, blocks, thorns, rivers, shadows, drones) {
 	this.hills = new Curve(hillData);
 }
 
-Level.prototype.run = function (canvas, callback) {
+Level.prototype.run = function (canvas, onMsg, onEnd) {
 	var cat, t0, start, end,
 		level = this,
 		rAF = window.requestAnimationFrame || window.mozRequestAnimationFrame;
@@ -54,6 +56,9 @@ Level.prototype.run = function (canvas, callback) {
 					level.drones[i].move(dt);
 				}
 				end = cat.move(keys.left, keys.right, keys.jump, dt);
+				if (end) {
+					onMsg(end);
+				}
 			} else if (start || end === -1) {
 				cat.move(false, false, false, dt);
 			}
@@ -75,7 +80,7 @@ Level.prototype.run = function (canvas, callback) {
 		if (!stopLoop) {
 			rAF(loop);
 		} else {
-			callback(end);
+			onEnd(end);
 		}
 	}
 
@@ -86,8 +91,14 @@ Level.prototype.run = function (canvas, callback) {
 
 Level.prototype.insideBlock = function (x, y) {
 	var i, inside;
-	for (i = 0; i < this.blocks.length; i++) {
-		inside = this.blocks[i].inside(x, y);
+	for (i = 0; i < this.blocks[0].length; i++) {
+		inside = this.blocks[0][i].inside(x, y);
+		if (inside) {
+			return inside;
+		}
+	}
+	for (i = 0; i < this.blocks[1].length; i++) {
+		inside = this.blocks[1][i].inside(x, y);
 		if (inside) {
 			return inside;
 		}
@@ -96,14 +107,14 @@ Level.prototype.insideBlock = function (x, y) {
 
 Level.prototype.getEnd = function (x, y) {
 	var i;
-	for (i = 0; i < this.thorns.length; i++) {
-		if (this.thorns[i].inside(x, y)) {
-			return 1;
+	for (i = 0; i < this.blocks[2].length; i++) {
+		if (this.blocks[2][i].inside(x, y)) {
+			return 2;
 		}
 	}
-	for (i = 0; i < this.rivers.length; i++) {
-		if (this.rivers[i].inside(x, y)) {
-			return 2;
+	for (i = 0; i < this.blocks[3].length; i++) {
+		if (this.blocks[3][i].inside(x, y)) {
+			return 3;
 		}
 	}
 	if (x >= this.max - 140) {
@@ -120,7 +131,7 @@ Level.prototype.getDroneEnd = function (x, y) {
 	}
 	for (i = 0; i < this.drones.length; i++) {
 		if (Math.abs(this.drones[i].x - x) < 10) {
-			return 3;
+			return 1;
 		}
 	}
 };
@@ -137,6 +148,10 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	//background
 	canvas.ctx.fillStyle = SKY;
 	canvas.ctx.fillRect(0, 0, canvas.w, canvas.h);
+	canvas.ctx.fillStyle = MOON;
+	canvas.ctx.beginPath();
+	canvas.ctx.arc(100, 100, 55, 0, 2 * Math.PI);
+	canvas.ctx.fill();
 
 	canvas.ctx.save();
 	canvas.ctx.translate(-dx / 2, -0.25 * dy);
@@ -158,9 +173,9 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	canvas.ctx.beginPath();
 	canvas.ctx.rect(this.max - 150, y - 200, 20, 220);
 	canvas.ctx.moveTo(this.max - 190, y - 170);
-	canvas.ctx.lineTo(this.max - 90, y - 170);
+	canvas.ctx.lineTo(this.max - 95, y - 170);
 	canvas.ctx.lineTo(this.max - 80, y - 155);
-	canvas.ctx.lineTo(this.max - 90, y - 140);
+	canvas.ctx.lineTo(this.max - 95, y - 140);
 	canvas.ctx.lineTo(this.max - 190, y - 140);
 	canvas.ctx.closePath();
 	canvas.ctx.fill();
@@ -185,24 +200,20 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	}
 	canvas.ctx.fill();
 
-	//ground
+	//ground and grass blocks
 	canvas.ctx.fillStyle = GRASS;
 	canvas.ctx.beginPath();
 	canvas.ctx.moveTo(this.min, canvas.h);
 	this.ground.path(canvas.ctx);
 	canvas.ctx.lineTo(this.max, canvas.h);
 	canvas.ctx.closePath();
+	canvas.blockPaths(this.blocks[0], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 
-	//blocks
-	canvas.ctx.fillStyle = WOOD; //TODO also allow GRASS
+	//wood/brick blocks
+	canvas.ctx.fillStyle = WOOD;
 	canvas.ctx.beginPath();
-	for (i = 0; i < this.blocks.length; i++) {
-		if (this.blocks[i].min > dx + canvas.w || this.blocks[i].max < dx) {
-			continue;
-		}
-		this.blocks[i].path(canvas.ctx);
-	}
+	canvas.blockPaths(this.blocks[1], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 
 	//cat
@@ -211,38 +222,22 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	}
 
 	//grass
-	//TODO
-	canvas.ctx.beginPath();
-	for (x = dx; x < dx + canvas.w; x++) {
-		if (this.min <= x && x <= this.max && Math.sin(8 * x) > 0.75) {
-			y = this.ground.y(x);
-			canvas.ctx.moveTo(x, y + 3);
-			canvas.ctx.lineTo(x + 2 * Math.sin(this.animationTime / 300), y - 10);
-			canvas.ctx.lineTo(x + 1, y + 3);
-			canvas.ctx.closePath();
-		}
-	}
 	canvas.ctx.fillStyle = GRASS;
+	canvas.ctx.beginPath();
+	this.ground.grass(canvas.ctx, dx, dx + canvas.w, this.animationTime);
+	for (i = 0; i < this.blocks[0].length; i++) {
+		this.blocks[0][i].top.grass(canvas.ctx, dx, dx + canvas.w, this.animationTime);
+	}
 	canvas.ctx.fill();
 
 	//thorns and rivers
 	canvas.ctx.fillStyle = THORNS;
 	canvas.ctx.beginPath();
-	for (i = 0; i < this.thorns.length; i++) {
-		if (this.thorns[i].min > dx + canvas.w || this.thorns[i].max < dx) {
-			continue;
-		}
-		this.thorns[i].thornyPath(canvas.ctx);
-	}
+	canvas.blockPaths(this.blocks[2], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 	canvas.ctx.fillStyle = WATER;
 	canvas.ctx.beginPath();
-	for (i = 0; i < this.rivers.length; i++) {
-		if (this.rivers[i].min > dx + canvas.w || this.rivers[i].max < dx) {
-			continue;
-		}
-		this.rivers[i].path(canvas.ctx);
-	}
+	canvas.blockPaths(this.blocks[3], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 
 	if (!noCatNoRestore) {
@@ -264,7 +259,7 @@ Level.prototype.drawEnd = function (canvas, cat, dt, end) {
 	x = (cat.x0 + cat.x1) / 2;
 	y = (cat.y0 + cat.y1) / 2;
 	switch (end) {
-	case 3:
+	case 1:
 		canvas.ctx.strokeStyle = '#f00';
 		canvas.ctx.lineWidth = 2;
 		canvas.ctx.beginPath();
@@ -272,7 +267,7 @@ Level.prototype.drawEnd = function (canvas, cat, dt, end) {
 		canvas.ctx.lineTo(x, 50 + Math.min(0, y - canvas.h / 3));
 		canvas.ctx.stroke();
 		/*falls through*/
-	case 1:
+	case 2:
 		canvas.ctx.translate(x, y + this.endTime * this.endTime / 4000);
 		canvas.ctx.fillStyle = '#000';
 		for (i = 0; i < 100; i++) {
@@ -283,7 +278,7 @@ Level.prototype.drawEnd = function (canvas, cat, dt, end) {
 		}
 		canvas.ctx.restore();
 		break;
-	case 2:
+	case 3:
 		canvas.ctx.fillStyle = WATER;
 		canvas.ctx.beginPath();
 		canvas.ctx.arc(x, y, this.endTime, 0, 2 * Math.PI);

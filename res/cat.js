@@ -9,10 +9,11 @@ var WIDTH = 100,
 	VY_MAX = 0.2,
 	ACCEL = 0.0002,
 	GRAVITY = 0.0002,
-	JUMP = 0.375,
+	JUMP = 0.35,
 	JUMP_TIME = 200,
 	ROTATION_MAX = 0.0007,
-	TURNING_TIME = 200;
+	TURNING_TIME = 200,
+	DUST_TIME = 200;
 
 function Cat (level) {
 	this.level = level;
@@ -29,10 +30,11 @@ function Cat (level) {
 	this.jumpTime = 0;
 	this.variationTime = 0;
 	this.walkPos = 0;
+	this.dustTime = 0;
 }
 
 Cat.prototype.draw = function (ctx) {
-	var dx, dy, a;
+	var dx, dy, a, i, t;
 	dx = this.x0 - this.x1;
 	dy = this.y0 - this.y1;
 	ctx.save();
@@ -42,8 +44,26 @@ Cat.prototype.draw = function (ctx) {
 	if (dx < 0) {
 		ctx.scale(1, -1);
 	}
-	drawCat(ctx, Math.sqrt(dx * dx + dy * dy), -a, this.walkPos / 100, this.variationTime / 1000, this.turning / TURNING_TIME);
+	drawCat(
+		ctx,
+		Math.sqrt(dx * dx + dy * dy), -a,
+		this.walkPos / 100, this.variationTime / 1000, this.turning / TURNING_TIME
+	);
 	ctx.restore();
+	if (this.dustTime) {
+		//TODO
+		t = this.dustTime / DUST_TIME;
+		ctx.fillStyle = 'rgba(68,68,68,' + (t * t) + ')';
+		for (i = -25; i <= 25; i += 5) {
+			ctx.beginPath();
+			ctx.arc(
+				this.dustX + (1 - t) * i,
+				this.dustY - 0.1 * t * (1 - t) * (25 * 25 - i * i),
+				1, 0, 2 * Math.PI
+			);
+			ctx.fill();
+		}
+	}
 };
 
 Cat.prototype.followCurve = function (x, curve, dx) {
@@ -161,6 +181,7 @@ Cat.prototype.swap = function () {
 Cat.prototype.move = function (left, right, jump, dt) {
 	this.variationTime += dt;
 	this.jumpTime = Math.max(0, this.jumpTime - dt);
+	this.dustTime = Math.max(0, this.dustTime - dt);
 	if (this.turning > 0) {
 		this.turning -= dt;
 		if (this.turning >= 0) {
@@ -263,6 +284,7 @@ Cat.prototype.slide = function (left, right, jump, dt) {
 		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
 		this.vy -= JUMP * Math.min(dt, this.jumpTime) / JUMP_TIME;
 		this.vy = Math.max(this.vy, -1.5 * JUMP);
+		this.walkPos += dt * Math.abs(this.vy);
 	}
 	this.vy += GRAVITY * dt;
 	this.vy = Math.min(this.vy, VY_MAX);
@@ -422,6 +444,11 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	if (pos.hitCurve) {
 		this.vy = 0;
 	}
+	if (pos.curve) {
+		this.dustTime = DUST_TIME;
+		this.dustX = this.x0;
+		this.dustY = this.y0;
+	}
 	pos = this.catchCurve(
 		this.x1, this.y1,
 		dx + (this.x1 - x) * cosa - (this.y1 - y) * sina,
@@ -444,6 +471,11 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	}
 	if (pos.hitCurve) {
 		this.vy = 0;
+	}
+	if (pos.curve) {
+		this.dustTime = DUST_TIME;
+		this.dustX = this.x1;
+		this.dustY = this.y1;
 	}
 	if (this.curve0 && this.curve1) {
 		this.vx = 0;

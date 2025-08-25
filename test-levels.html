@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>Edgar’s Mission</title>
+<title>Test Levels</title>
 <meta name="viewport" content="width=device-width">
-<!--delete from here-->
 <link rel="stylesheet" href="res/game.css">
 <script src="res/canvas.js" defer></script>
 <script src="res/curve.js" defer></script>
@@ -14,18 +13,22 @@
 <script src="res/cat.js" defer></script>
 <script src="res/keys.js" defer></script>
 <script src="res/levels.js" defer></script>
-<script src="res/game.js" defer></script>
-<!--delete to here-->
-<!--delete line
+<script src="res/test-levels.js" defer></script>
 <style>
-insert min.css
+html {
+	font: 16px sans-serif;
+	color: #fff;
+}
+p {
+	margin-left: 0.5em;
+}
 </style>
-delete line-->
 </head><body>
+<p>
+<label>Level: <select id="l"></select></label>
+Current pos: x = <span id="x"></span>, y = <span id="y"></span>
+Death: <span id="d"></span>
+<button id="r">↺</button>
+</p>
 <canvas id="c" moz-opaque></canvas>
-<!--delete line
-<script>
-insert min.js
-</script>
-delete line-->
 </body></html>

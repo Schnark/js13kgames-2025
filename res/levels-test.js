@@ -39,11 +39,14 @@ function loadLevels (callback) {
 }
 
 function testSelectedLevel () {
+	var level;
 	endLevel = false;
 	window.setTimeout(function () {
 		setCat = false;
 	}, 500);
-	levels[levelSelect.value].run(canvas, function () {}, testSelectedLevel);
+	level = levels[levelSelect.value][0];
+	level.next = '';
+	level.run(canvas, function () {}, testSelectedLevel);
 }
 
 function init () {

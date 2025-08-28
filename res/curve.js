@@ -65,21 +65,21 @@ Curve.prototype.pathBottom = function (ctx) {
 };
 
 Curve.prototype.grass = function (ctx, min, max, time) {
-	var x, y;
-	min = Math.max(this.min, min);
-	max = Math.min(this.max, max);
-	if (min >= max) {
+	var x, y, xx;
+	min = Math.max(this.min, min - 2);
+	max = Math.min(this.max, max + 2);
+	if (min + 2 >= max - 2) {
 		return;
 	}
 	//TODO
-	for (x = min; x < max; x++) {
-		if (Math.sin(8 * x) > 0.8) {
-			y = this.y(x);
-			ctx.moveTo(x, y + 3);
-			ctx.lineTo(x + 2 * Math.sin(time / 300), y - 15);
-			ctx.lineTo(x + 2.5, y + 3);
-			ctx.closePath();
-		}
+	for (x = min + 2; x < max - 2; x += 5) {
+		xx = 5 * Math.floor(x / 5);
+		xx += 2 * Math.sin(xx);
+		y = this.y(xx);
+		ctx.moveTo(xx, y + 3);
+		ctx.quadraticCurveTo(xx, y - 10, xx + 1 + 3 * Math.sin(time / 300 + xx / 200), y - 13 + 3 * Math.cos(xx / 100));
+		ctx.quadraticCurveTo(xx, y - 10, xx + 1.5, y + 3);
+		ctx.closePath();
 	}
 };
 

@@ -1,6 +1,6 @@
-JS = res/canvas.js res/curve.js res/block.js res/drone.js res/level.js res/draw-cat.js res/cat.js res/keys.js res/levels.js res/game.js
-DEV_JS = res/draw-cat-test.js res/test-levels.js
-GLOBAL = Canvas, Curve, Block, Drone, Level, drawCat, Cat, keys, levels
+JS = res/canvas.js res/curve.js res/block.js res/drone.js res/level.js res/draw-cat.js res/cat.js res/keys.js res/levels.js res/intro.js res/game.js
+DEV_JS = res/audio.js res/audio-test.js res/draw-cat-test.js res/levels-test.js
+GLOBAL = Canvas, Curve, Block, Drone, Level, drawCat, Cat, keys, levels, intro
 
 .PHONY: check
 check: min/game.zip

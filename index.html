@@ -14,6 +14,7 @@
 <script src="res/cat.js" defer></script>
 <script src="res/keys.js" defer></script>
 <script src="res/levels.js" defer></script>
+<script src="res/intro.js" defer></script>
 <script src="res/game.js" defer></script>
 <!--delete to here-->
 <!--delete line
@@ -22,7 +23,14 @@ insert min.css
 </style>
 delete line-->
 </head><body>
+<div id="s">
+<p>I'm Edgar the cat, and my owner has been kidnapped.<br>Will you help me on my mission to find him?</p>
+<canvas id="i" moz-opaque></canvas>
+<p><button id="r">Start game</button></p>
+</div>
+<div id="g" hidden>
 <canvas id="c" moz-opaque></canvas>
+</div>
 <!--delete line
 <script>
 insert min.js

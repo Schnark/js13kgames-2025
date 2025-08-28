@@ -1,8 +1,14 @@
-/*global Canvas, levels*/
+/*global Canvas, levels, intro*/
 (function () {
 "use strict";
 
-var canvas, state, msgs, hints, hintsForLevels;
+var i, l, canvas, state, hints, hintsForLevel;
+
+l = levels.length;
+for (i = 0; i < l - 1; i++) {
+	levels[i][0].next = (i + 2) + '/' + l;
+}
+levels[l - 1][0].next = 'End';
 
 canvas = new Canvas(document.getElementById('c'), 700, 700, 1400); //first 700 = nominal height of level
 
@@ -12,24 +18,35 @@ state = {
 	hints: [-1]
 };
 
-msgs = ['Level 1', 'Level 2'];
-hints = ['', 'You die after a drone shot you.', 'You die after falling into a thorny bush.', 'You die after falling into a river.'];
-hintsForLevels = [[1, 2, 3], [-1]];
-
-levels[1] = levels[0];
+hints = [
+	'',
+	'As a black cat, you can hide from drones in the shadows.',
+	'Keep away from thorns.',
+	'Keep away from water.'
+];
 
 function onMsg (msg) {
-	var showMsg = false;
+	var showMsg = false, hint;
 	if (state.hints.indexOf(msg) === -1) {
 		state.hints.push(msg);
 		showMsg = true;
 	}
-	if (hintsForLevels[state.level].indexOf(msg) > -1) {
+	if (hintsForLevel.indexOf(msg) > -1) {
 		showMsg = true;
 	}
 	if (showMsg) {
 		if (msg === -1) {
-			hints[msg] = 'You win after ' + state.deaths + ' deaths!';
+			switch (state.deaths) {
+			case 0:
+				hint = 'You win without ever dying!';
+				break;
+			case 1:
+				hint = 'You win (after having died once)!';
+				break;
+			default:
+				hint = 'You win (after having died ' + state.deaths + ' times)!';
+			}
+			hints[msg] = hint;
 		}
 		canvas.setText(hints[msg]);
 	}
@@ -41,15 +58,19 @@ function playLevel (n, callback) {
 	function onEnd (end) {
 		if (end !== -1) {
 			state.deaths++;
-			level.run(canvas, onMsg, onEnd);
+			level[0].run(canvas, onMsg, onEnd);
 		} else {
 			callback();
 		}
 	}
 
-	canvas.setText(msgs[n]);
+	hintsForLevel = level[2] || [];
+	if (n === levels.length - 1) {
+		hintsForLevel.push(-1);
+	}
+	canvas.setText(level[1]);
 	state.level = n;
-	level.run(canvas, onMsg, onEnd);
+	level[0].run(canvas, onMsg, onEnd);
 }
 
 function playLevels (n, callback) {
@@ -62,6 +83,15 @@ function playLevels (n, callback) {
 	}
 }
 
-playLevels(state.level, function () {});
+intro.start();
+document.getElementById('r').addEventListener('click', function () {
+	intro.stop();
+	document.getElementById('s').hidden = true;
+	document.getElementById('g').hidden = false;
+	playLevels(state.level, function () {
+		canvas.ctx.fillText('Finally! I found my owner!', canvas.w / 2, 200, canvas.w);
+		canvas.ctx.fillText('Now where is my dinner?', canvas.w / 2, 250, canvas.w);
+	});
+});
 
 })();

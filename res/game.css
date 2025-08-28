@@ -3,9 +3,16 @@ body {
 	margin: 0;
 	padding: 0;
 	background: #000;
+	color: #fff;
+	font: 22px sans-serif;
 }
 
-#c {
+#s p {
+	line-height: 1.8;
+	text-align: center;
+}
+
+canvas {
 	display: block;
 	margin: auto;
 }

@@ -9,8 +9,8 @@ var SKY = '#004',
 	HILL = '#688',
 	GRASS = '#010',
 	WOOD = '#100',
-	THORNS = '#300',
-	WATER = '#003',
+	THORNS = '#100',
+	WATER = '#001',
 	SHADOW = '#111';
 
 function Level (ground, blocks, drones, shadows) {
@@ -77,6 +77,9 @@ Level.prototype.run = function (canvas, onMsg, onEnd) {
 		canvas.showText();
 
 		t0 = t;
+		if (level.intro && level.stop) {
+			stopLoop = true;
+		}
 		if (!stopLoop) {
 			rAF(loop);
 		} else {
@@ -168,17 +171,24 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	canvas.ctx.translate(-dx / 2, -0.75 * dy);
 
 	//sign post at the end
-	y = this.ground.y(this.max - 140);
-	canvas.ctx.fillStyle = WOOD;
-	canvas.ctx.beginPath();
-	canvas.ctx.rect(this.max - 150, y - 200, 20, 220);
-	canvas.ctx.moveTo(this.max - 190, y - 170);
-	canvas.ctx.lineTo(this.max - 95, y - 170);
-	canvas.ctx.lineTo(this.max - 80, y - 155);
-	canvas.ctx.lineTo(this.max - 95, y - 140);
-	canvas.ctx.lineTo(this.max - 190, y - 140);
-	canvas.ctx.closePath();
-	canvas.ctx.fill();
+	if (dx > this.max - canvas.w - 200) {
+		y = this.ground.y(this.max - 140);
+		canvas.ctx.fillStyle = WOOD;
+		canvas.ctx.beginPath();
+		canvas.ctx.rect(this.max - 150, y - 200, 20, 220);
+		canvas.ctx.moveTo(this.max - 190, y - 170);
+		canvas.ctx.lineTo(this.max - 95, y - 170);
+		canvas.ctx.lineTo(this.max - 80, y - 155);
+		canvas.ctx.lineTo(this.max - 95, y - 140);
+		canvas.ctx.lineTo(this.max - 190, y - 140);
+		canvas.ctx.closePath();
+		canvas.ctx.fill();
+		canvas.ctx.fillStyle = MOON;
+		canvas.ctx.font = '20px sans-serif';
+		canvas.ctx.textAlign = 'left';
+		canvas.ctx.textBaseline = 'alphabetic';
+		canvas.ctx.fillText(this.next, this.max - 160, y - 150);
+	}
 
 	//drones
 	for (i = 0; i < this.drones.length; i++) {
@@ -246,8 +256,11 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 };
 
 Level.prototype.drawStart = function (canvas, cat, dt) {
-	this.startTime += dt;
 	this.draw(canvas, cat, dt);
+	if (this.intro) {
+		return;
+	}
+	this.startTime += dt;
 	canvas.fade(1 - this.startTime / 1000);
 	return this.startTime > 1000;
 };

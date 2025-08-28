@@ -9,11 +9,10 @@ var WIDTH = 100,
 	VY_MAX = 0.2,
 	ACCEL = 0.0002,
 	GRAVITY = 0.0002,
-	JUMP = 0.35,
+	JUMP = 0.3,
 	JUMP_TIME = 200,
 	ROTATION_MAX = 0.0007,
-	TURNING_TIME = 200,
-	DUST_TIME = 200;
+	TURNING_TIME = 200;
 
 function Cat (level) {
 	this.level = level;
@@ -30,11 +29,10 @@ function Cat (level) {
 	this.jumpTime = 0;
 	this.variationTime = 0;
 	this.walkPos = 0;
-	this.dustTime = 0;
 }
 
 Cat.prototype.draw = function (ctx) {
-	var dx, dy, a, i, t;
+	var dx, dy, a;
 	dx = this.x0 - this.x1;
 	dy = this.y0 - this.y1;
 	ctx.save();
@@ -50,24 +48,10 @@ Cat.prototype.draw = function (ctx) {
 		this.walkPos / 100, this.variationTime / 1000, this.turning / TURNING_TIME
 	);
 	ctx.restore();
-	if (this.dustTime) {
-		//TODO
-		t = this.dustTime / DUST_TIME;
-		ctx.fillStyle = 'rgba(68,68,68,' + (t * t) + ')';
-		for (i = -25; i <= 25; i += 5) {
-			ctx.beginPath();
-			ctx.arc(
-				this.dustX + (1 - t) * i,
-				this.dustY - 0.1 * t * (1 - t) * (25 * 25 - i * i),
-				1, 0, 2 * Math.PI
-			);
-			ctx.fill();
-		}
-	}
 };
 
 Cat.prototype.followCurve = function (x, curve, dx) {
-	var xNew = x + dx, y, inside, stop = false, leave = false;
+	var xNew = x + dx, y, inside, block, stop = false, leave = false;
 
 	if (xNew < this.level.min) {
 		xNew = this.level.min;
@@ -90,14 +74,39 @@ Cat.prototype.followCurve = function (x, curve, dx) {
 	y = curve.y(xNew);
 	inside = this.level.insideBlock(xNew, y);
 	if (inside) {
+		block = inside.block;
 		if (dx > 0) {
-			xNew -= inside.l;
-			stop = true;
-			leave = false;
+			if (block.y(block.min) >= curve.y(block.min)) {
+				curve = block;
+				if (xNew > curve.max) {
+					xNew = curve.max;
+					y = curve.y(xNew);
+					stop = false;
+					leave = true;
+				} else {
+					y = curve.y(xNew);
+				}
+			} else {
+				xNew -= inside.l;
+				stop = true;
+				leave = false;
+			}
 		} else {
-			xNew += inside.r;
-			stop = true;
-			leave = false;
+			if (block.y(block.max) >= curve.y(block.max)) {
+				curve = inside.block;
+				if (xNew < curve.min) {
+					xNew = curve.min;
+					y = curve.y(xNew);
+					stop = false;
+					leave = true;
+				} else {
+					y = curve.y(xNew);
+				}
+			} else {
+				xNew += inside.r;
+				stop = true;
+				leave = false;
+			}
 		}
 		y = curve.y(xNew);
 	}
@@ -181,7 +190,6 @@ Cat.prototype.swap = function () {
 Cat.prototype.move = function (left, right, jump, dt) {
 	this.variationTime += dt;
 	this.jumpTime = Math.max(0, this.jumpTime - dt);
-	this.dustTime = Math.max(0, this.dustTime - dt);
 	if (this.turning > 0) {
 		this.turning -= dt;
 		if (this.turning >= 0) {
@@ -225,7 +233,7 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 			this.vx = Math.min(this.vx, VX_MAX);
 		}
 	}
-	this.vy = this.vx * (this.y1 - this.y0) / (this.x1 - this.x0);
+	this.vy = Math.min(0, this.vx * (this.y1 - this.y0) / (this.x1 - this.x0));
 
 	this.jumpTime = 0;
 	if (jump) {
@@ -399,17 +407,28 @@ Cat.prototype.slide = function (left, right, jump, dt) {
 };
 
 Cat.prototype.fly = function (left, right, jump, dt) {
-	var dx, dy, a, da, sina, cosa, x, y, pos;
-	//TODO also allow moving a bit if this.jumpTime === 0?
+	var vxMax, dx, dy, a, da, sina, cosa, x, y, pos;
+	vxMax = VX_MAX;
+	if (this.jumpTime === 0) {
+		vxMax /= 10;
+	}
+	if (
+		(left && this.x0 > this.x1) ||
+		(right && this.x0 < this.x1)
+	) {
+		vxMax /= 2;
+	}
+	vxMax = Math.max(Math.abs(this.vx), vxMax);
 	if (left) {
-		this.vx -= ACCEL * Math.min(dt, this.jumpTime);
-		this.vx = Math.max(this.vx, this.x0 > this.x1 ? -VX_MAX / 2 : -VX_MAX);
+		this.vx -= ACCEL * dt;
+		this.vx = Math.max(this.vx, -vxMax);
 	} else if (right) {
-		this.vx += ACCEL * Math.min(dt, this.jumpTime);
-		this.vx = Math.min(this.vx, this.x0 > this.x1 ? VX_MAX : VX_MAX / 2);
+		this.vx += ACCEL * dt;
+		this.vx = Math.min(this.vx, vxMax);
 	}
 	if (jump) {
 		this.vy -= JUMP * Math.min(dt, this.jumpTime) / JUMP_TIME;
+		this.vy = Math.max(this.vy, -1.5 * JUMP);
 	}
 	this.vy += GRAVITY * dt;
 	this.vy = Math.min(this.vy, VY_MAX);
@@ -444,11 +463,6 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	if (pos.hitCurve) {
 		this.vy = 0;
 	}
-	if (pos.curve) {
-		this.dustTime = DUST_TIME;
-		this.dustX = this.x0;
-		this.dustY = this.y0;
-	}
 	pos = this.catchCurve(
 		this.x1, this.y1,
 		dx + (this.x1 - x) * cosa - (this.y1 - y) * sina,
@@ -471,11 +485,6 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	}
 	if (pos.hitCurve) {
 		this.vy = 0;
-	}
-	if (pos.curve) {
-		this.dustTime = DUST_TIME;
-		this.dustX = this.x1;
-		this.dustY = this.y1;
 	}
 	if (this.curve0 && this.curve1) {
 		this.vx = 0;

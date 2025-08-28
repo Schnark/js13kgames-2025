@@ -17,3 +17,5 @@ Most platformers treat the player just as one point. The image for the player is
 Technically, the cat is just a rectangle (with slighly varying length and more or less arbitrary height), and this was exactly the placeholder in the early prototypes of the game. The actual cat is just drawn into this rectangle, and there is https://schnark.github.io/js13kgames-2025/test-cat.html to test the design of the cat.
 
 For level design there is https://schnark.github.io/js13kgames-2025/test-levels.html which allows direct selection of a level, shows the position, disables death, and most importantly allows reloading an updated level while keeping the current position of the cat.
+
+For music and sound I used my own library from previous years, to test the music there is https://schnark.github.io/js13kgames-2025/test-audio.html.

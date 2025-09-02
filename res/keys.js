@@ -1,4 +1,5 @@
 /*global keys: true*/
+/*global Event*/
 keys =
 (function () {
 "use strict";
@@ -7,7 +8,7 @@ var keys = {
 	left: false,
 	right: false,
 	jump: false
-};
+}, audioCheckbox;
 
 function getKey (e) {
 	if (e.key && e.key !== 'Unidentified') {
@@ -41,17 +42,25 @@ function getAction (e) {
 	case ' ':
 	case 'ArrowUp':
 		return 'jump';
+	case 'm':
+		return 'audio';
 	}
 }
 
 function handler (e) {
 	var action = getAction(e);
-	if (action) {
+	if (action === 'audio') {
+		if (e.type === 'keydown') {
+			audioCheckbox.checked = !audioCheckbox.checked;
+			audioCheckbox.dispatchEvent(new Event('change'));
+		}
+	} else if (action) {
 		keys[action] = e.type === 'keydown';
 		e.preventDefault();
 	}
 }
 
+audioCheckbox = document.getElementById('a');
 document.addEventListener('keydown', handler);
 document.addEventListener('keyup', handler);
 

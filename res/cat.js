@@ -1,5 +1,5 @@
 /*global Cat: true*/
-/*global drawCat*/
+/*global drawCat, audio*/
 Cat =
 (function () {
 "use strict";
@@ -29,6 +29,7 @@ function Cat (level) {
 	this.jumpTime = 0;
 	this.variationTime = 0;
 	this.walkPos = 0;
+	this.noRotTime = 0;
 }
 
 Cat.prototype.draw = function (ctx) {
@@ -190,6 +191,7 @@ Cat.prototype.swap = function () {
 Cat.prototype.move = function (left, right, jump, dt) {
 	this.variationTime += dt;
 	this.jumpTime = Math.max(0, this.jumpTime - dt);
+	this.noRotTime = Math.max(0, this.noRotTime - dt);
 	if (this.turning > 0) {
 		this.turning -= dt;
 		if (this.turning >= 0) {
@@ -237,9 +239,11 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 
 	this.jumpTime = 0;
 	if (jump) {
+		audio.sound('cat0');
 		this.curve0 = null;
 		this.curve1 = null;
 		this.jumpTime = JUMP_TIME;
+		this.noRotTime = 3 * Math.abs(this.vy) / JUMP * JUMP_TIME;
 		this.fly(left, right, jump, dt);
 		return;
 	}
@@ -440,8 +444,8 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	if (this.x0 < this.x1) {
 		da = -da;
 	}
-	da = Math.min(Math.abs(dy) / WIDTH, dt * ROTATION_MAX, da);
-	da = Math.max(-Math.abs(dy) / WIDTH, -dt * ROTATION_MAX, da);
+	da = Math.min(Math.abs(dy) / WIDTH, Math.max(0, dt - this.noRotTime) * ROTATION_MAX, da);
+	da = Math.max(-Math.abs(dy) / WIDTH, -Math.max(0, dt - this.noRotTime) * ROTATION_MAX, da);
 	sina = Math.sin(da);
 	cosa = Math.cos(da) - 1;
 	x = (this.x0 + this.x1) / 2;
@@ -488,6 +492,9 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	}
 	if (this.curve0 && this.curve1) {
 		this.vx = 0;
+	}
+	if (this.curve0 || this.curve1) {
+		audio.sound('cat1');
 	}
 };
 

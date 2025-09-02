@@ -1,16 +1,16 @@
 /*global Level: true*/
-/*global Curve, Drone, Cat, keys*/
+/*global Curve, Drone, Cat, audio, keys*/
 Level =
 (function () {
 "use strict";
 
-var SKY = '#004',
-	MOON = '#aa8',
-	HILL = '#688',
-	GRASS = '#010',
+var MOON = '#aa8',
+	//SKY = '#004',
+	//HILL = '#688',
+	GRASS = '#001a00',
 	WOOD = '#100',
-	THORNS = '#100',
-	WATER = '#001',
+	THORNS = '#200',
+	WATER = '#002',
 	SHADOW = '#111';
 
 function Level (ground, blocks, drones, shadows) {
@@ -47,15 +47,43 @@ Level.prototype.run = function (canvas, onMsg, onEnd) {
 		return new Drone(data[0], data[1], data[2] || 0.1);
 	});
 
+	function moveStep (dt) {
+		var i;
+		for (i = 0; i < level.drones.length; i++) {
+			level.drones[i].move(dt);
+		}
+		end = cat.move(keys.left, keys.right, keys.jump, dt);
+	}
+
+	function move (dt) {
+		while (dt > 50) {
+			dt -= 50;
+			moveStep(50);
+			if (end) {
+				return;
+			}
+		}
+		if (dt) {
+			moveStep(dt);
+		}
+	}
+
 	function loop (t) {
-		var dt = 0, i, stopLoop;
+		var dt = 0, musicSpeed, stopLoop;
+		if (!level.intro) {
+			if (start || end) {
+				musicSpeed = 0;
+			} else if (Math.abs(cat.vx) > 0.1 || Math.abs(cat.vy) > 0.15) {
+				musicSpeed = -1;
+			} else {
+				musicSpeed = 1;
+			}
+			audio.tick(musicSpeed);
+		}
 		if (t0) {
 			dt = t - t0;
 			if (!start && !end) {
-				for (i = 0; i < level.drones.length; i++) {
-					level.drones[i].move(dt);
-				}
-				end = cat.move(keys.left, keys.right, keys.jump, dt);
+				move(dt);
 				if (end) {
 					onMsg(end);
 				}
@@ -139,6 +167,25 @@ Level.prototype.getDroneEnd = function (x, y) {
 	}
 };
 
+function drawTree (ctx, l, a) {
+	var d;
+	if (l < 2) {
+		return;
+	}
+	d = l / 4;
+	ctx.rect(-d / 2, -l, d, l);
+	ctx.save();
+	ctx.translate(-d * 0.2, 5 - l);
+	ctx.rotate(-0.3 + a);
+	drawTree(ctx, l * 0.6, a);
+	ctx.restore();
+	ctx.save();
+	ctx.translate(d * 0.2, 5 - l);
+	ctx.rotate(0.4 + a);
+	drawTree(ctx, l * 0.7, a);
+	ctx.restore();
+}
+
 Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	var dx, dy, x, y, i;
 	dx = (cat.x0 + cat.x1) / 2 - canvas.w / 2;
@@ -149,7 +196,7 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	this.animationTime += dt;
 
 	//background
-	canvas.ctx.fillStyle = SKY;
+	canvas.ctx.fillStyle = canvas.sky;
 	canvas.ctx.fillRect(0, 0, canvas.w, canvas.h);
 	canvas.ctx.fillStyle = MOON;
 	canvas.ctx.beginPath();
@@ -160,7 +207,7 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	canvas.ctx.translate(-dx / 2, -0.25 * dy);
 
 	//hills
-	canvas.ctx.fillStyle = HILL;
+	canvas.ctx.fillStyle = canvas.hills;
 	canvas.ctx.beginPath();
 	canvas.ctx.moveTo(this.min, canvas.h);
 	this.hills.path(canvas.ctx);
@@ -209,6 +256,20 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 		canvas.ctx.closePath();
 	}
 	canvas.ctx.fill();
+	canvas.ctx.fillStyle = WOOD;
+	canvas.ctx.beginPath();
+	for (i = 0; i < this.shadows.length; i++) {
+		x = this.shadows[i];
+		if (x - 110 > dx + canvas.w || x + 110 < dx) {
+			continue;
+		}
+		y = this.ground.y(x);
+		canvas.ctx.save();
+		canvas.ctx.translate(x - 50, y + 10);
+		drawTree(canvas.ctx, 100, 0.05 * Math.sin(this.animationTime / 1500));
+		canvas.ctx.restore();
+	}
+	canvas.ctx.fill();
 
 	//ground and grass blocks
 	canvas.ctx.fillStyle = GRASS;
@@ -218,12 +279,6 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	canvas.ctx.lineTo(this.max, canvas.h);
 	canvas.ctx.closePath();
 	canvas.blockPaths(this.blocks[0], dx, dx + canvas.w, this.animationTime);
-	canvas.ctx.fill();
-
-	//wood/brick blocks
-	canvas.ctx.fillStyle = WOOD;
-	canvas.ctx.beginPath();
-	canvas.blockPaths(this.blocks[1], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 
 	//cat
@@ -238,6 +293,12 @@ Level.prototype.draw = function (canvas, cat, dt, noCatNoRestore) {
 	for (i = 0; i < this.blocks[0].length; i++) {
 		this.blocks[0][i].top.grass(canvas.ctx, dx, dx + canvas.w, this.animationTime);
 	}
+	canvas.ctx.fill();
+
+	//wood/brick blocks
+	canvas.ctx.fillStyle = WOOD;
+	canvas.ctx.beginPath();
+	canvas.blockPaths(this.blocks[1], dx, dx + canvas.w, this.animationTime);
 	canvas.ctx.fill();
 
 	//thorns and rivers
@@ -261,8 +322,8 @@ Level.prototype.drawStart = function (canvas, cat, dt) {
 		return;
 	}
 	this.startTime += dt;
-	canvas.fade(1 - this.startTime / 1000);
-	return this.startTime > 1000;
+	canvas.fade(1 - this.startTime / 500);
+	return this.startTime > 500;
 };
 
 Level.prototype.drawEnd = function (canvas, cat, dt, end) {
@@ -281,7 +342,7 @@ Level.prototype.drawEnd = function (canvas, cat, dt, end) {
 		canvas.ctx.stroke();
 		/*falls through*/
 	case 2:
-		canvas.ctx.translate(x, y + this.endTime * this.endTime / 4000);
+		canvas.ctx.translate(x, y + this.endTime * this.endTime / 3000);
 		canvas.ctx.fillStyle = '#000';
 		for (i = 0; i < 100; i++) {
 			canvas.ctx.beginPath();
@@ -299,8 +360,8 @@ Level.prototype.drawEnd = function (canvas, cat, dt, end) {
 		cat.draw(canvas.ctx);
 		canvas.ctx.restore();
 	}
-	canvas.fade(this.endTime / 2000);
-	return this.endTime > 2000;
+	canvas.fade(this.endTime / 1500);
+	return this.endTime > 1500;
 };
 
 return Level;

@@ -9,6 +9,12 @@ function Canvas (canvas, height, minWidth, maxWidth) {
 	this.height = height;
 	this.minWidth = minWidth;
 	this.maxWidth = maxWidth;
+	this.sky = this.ctx.createRadialGradient(100, 100, 50, 100, 100, height * 0.4);
+	this.sky.addColorStop(0, '#006');
+	this.sky.addColorStop(1, '#004');
+	this.hills = this.ctx.createLinearGradient(0, 0, 0, height);
+	this.hills.addColorStop(0, '#abb');
+	this.hills.addColorStop(1, '#466');
 	this.s = 1;
 	this.resize();
 	window.addEventListener('resize', this.resize.bind(this));

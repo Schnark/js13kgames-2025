@@ -1,4 +1,4 @@
-/*global Cat, Canvas, levels*/
+/*global Cat, Canvas, audio, levels*/
 (function () {
 "use strict";
 
@@ -9,6 +9,8 @@ var xPos, yPos, setCat, endLevel,
 	deathOutput = document.getElementById('d'),
 	reloadButton = document.getElementById('r'),
 	canvas = new Canvas(document.getElementById('c'), 700, 700, 1400);
+
+audio.setMode(0);
 
 Cat.prototype.moveOrig = Cat.prototype.move;
 Cat.prototype.move = function (left, right, jump, dt) {

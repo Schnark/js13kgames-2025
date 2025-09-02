@@ -71,14 +71,13 @@ Curve.prototype.grass = function (ctx, min, max, time) {
 	if (min + 2 >= max - 2) {
 		return;
 	}
-	//TODO
 	for (x = min + 2; x < max - 2; x += 5) {
 		xx = 5 * Math.floor(x / 5);
 		xx += 2 * Math.sin(xx);
 		y = this.y(xx);
-		ctx.moveTo(xx, y + 3);
+		ctx.moveTo(xx, y + 5);
 		ctx.quadraticCurveTo(xx, y - 10, xx + 1 + 3 * Math.sin(time / 300 + xx / 200), y - 13 + 3 * Math.cos(xx / 100));
-		ctx.quadraticCurveTo(xx, y - 10, xx + 1.5, y + 3);
+		ctx.quadraticCurveTo(xx, y - 10, xx + 1.5, y + 5);
 		ctx.closePath();
 	}
 };

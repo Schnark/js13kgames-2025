@@ -26,7 +26,12 @@ Drone.prototype.draw = function (ctx, y) {
 	ctx.fillStyle = '#aaa';
 	ctx.strokeStyle = '#888';
 	ctx.lineWidth = 2;
-	ctx.fillRect(this.x - 40, y + 15, 80, 25);
+	ctx.beginPath();
+	ctx.rect(this.x - 40, y + 15, 80, 25);
+	ctx.moveTo(this.x - 30, y + 15);
+	ctx.quadraticCurveTo(this.x, y + 5, this.x + 30, y + 15);
+	ctx.fill();
+
 	ctx.beginPath();
 	ctx.moveTo(this.x - 40, y + 15);
 	ctx.lineTo(this.x - 50, y);

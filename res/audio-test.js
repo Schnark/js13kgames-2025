@@ -2,39 +2,38 @@
 (function () {
 "use strict";
 
-window.setInterval(audio.tick, 50);
+var slower = document.getElementById('slower'),
+	faster = document.getElementById('faster');
+
+window.setInterval(function () {
+	var d = 0;
+	if (slower.checked) {
+		d = 1;
+	} else if (faster.checked) {
+		d = -1;
+	}
+	audio.tick(d);
+}, 50);
 
 document.getElementById('play').addEventListener('click', audio.start);
 document.getElementById('stop').addEventListener('click', audio.stop);
-document.getElementById('sound-move').addEventListener('click', function () {
-	audio.sound('move');
+document.getElementById('sound-cat0').addEventListener('click', function () {
+	audio.sound('cat0');
 });
-document.getElementById('sound-open').addEventListener('click', function () {
-	audio.sound('open');
+document.getElementById('sound-cat1').addEventListener('click', function () {
+	audio.sound('cat1');
 });
-document.getElementById('sound-close').addEventListener('click', function () {
-	audio.sound('close');
+document.getElementById('sound-end1').addEventListener('click', function () {
+	audio.sound('end1');
 });
-document.getElementById('sound-teleport').addEventListener('click', function () {
-	audio.sound('teleport');
+document.getElementById('sound-end2').addEventListener('click', function () {
+	audio.sound('end2');
 });
-document.getElementById('sound-switch').addEventListener('click', function () {
-	audio.sound('switch');
+document.getElementById('sound-end3').addEventListener('click', function () {
+	audio.sound('end3');
 });
-document.getElementById('sound-win').addEventListener('click', function () {
-	audio.sound('win');
-});
-document.getElementById('sound-die').addEventListener('click', function () {
-	audio.sound('die');
-});
-document.getElementById('sound-jump').addEventListener('click', function () {
-	audio.sound('jump');
-});
-document.getElementById('sound-pew').addEventListener('click', function () {
-	audio.sound('pew');
-});
-document.getElementById('sound-blow').addEventListener('click', function () {
-	audio.sound('blow');
+document.getElementById('sound-end-1').addEventListener('click', function () {
+	audio.sound('end-1');
 });
 
 })();

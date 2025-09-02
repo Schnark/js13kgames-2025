@@ -16,3 +16,34 @@ canvas {
 	display: block;
 	margin: auto;
 }
+
+button {
+	border: none;
+	background: transparent;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+button:hover,
+button:focus {
+	transform: scale(1.2);
+}
+
+#i {
+	cursor: pointer;
+}
+
+label {
+	position: fixed;
+	top: 0;
+	right: 0;
+	cursor: pointer;
+}
+
+#a,
+#a:checked ~ .off,
+#a:not(:checked) ~ .on {
+	display: none;
+}

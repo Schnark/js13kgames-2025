@@ -3,7 +3,7 @@ audio =
 (function () {
 "use strict";
 
-var audioMode = 2, isPlaying = false, AC, audioContext, nodes = [], staffs;
+var audioMode = 2, isPlaying = false, AC, audioContext, nodes = [], staffs, lastTime, baseDur = 40 / 100;
 
 function getFreq (note, key) {
 	return key[note];
@@ -49,13 +49,13 @@ function playNotes (notes, dur, start, key, volume) {
 
 function playStaff (staff) {
 	var notes;
-	while (staff.time - audioContext.currentTime < 1) {
+	while (staff.time - audioContext.currentTime < 0.3) {
 		notes = staff.notes[staff.pos];
 		if (notes[0][0] === 'z') {
-			staff.time += notes[1] * staff.baseDur;
+			staff.time += notes[1] * baseDur;
 		} else {
 			staff.time = playNotes(
-				notes[0], notes[1] * staff.baseDur,
+				notes[0], notes[1] * baseDur,
 				staff.time,
 				staff.key,
 				staff.volume
@@ -65,7 +65,25 @@ function playStaff (staff) {
 	}
 }
 
-function playStaffs () {
+function modifySpeed (speedModify, time) {
+	var dt, dbD;
+	if (lastTime) {
+		dt = time - lastTime;
+		if (speedModify) {
+			dbD = speedModify * dt / 20;
+		} else {
+			dbD = 40 / 100 - baseDur;
+			dbD = Math.max(dbD, -dt / 20);
+			dbD = Math.min(dbD, dt / 20);
+		}
+		baseDur += dbD;
+		baseDur = Math.max(baseDur, 15 / 100);
+		baseDur = Math.min(baseDur, 65 / 100);
+	}
+	lastTime = time;
+}
+
+function playStaffs (speedModify) {
 	var i, time;
 	if (!isPlaying || audioMode !== 2) {
 		return;
@@ -73,6 +91,7 @@ function playStaffs () {
 	if (!audioContext) {
 		audioContext = new AC();
 	}
+	modifySpeed(speedModify, audioContext.currentTime);
 	for (i = 0; i < staffs.length; i++) {
 		if (staffs[i].time === -1) {
 			if (!time) {
@@ -103,14 +122,13 @@ function stop () {
 	}
 }
 
-function initStaff (notes, key, volume, baseDur) {
+function initStaff (notes, key, volume) {
 	staffs.push({
 		time: -1,
 		pos: 0,
 		notes: notes,
 		key: key,
-		volume: volume,
-		baseDur: baseDur
+		volume: volume
 	});
 }
 
@@ -153,17 +171,21 @@ function setMelody () {
 
 	parts = [
 		'D G B2 G D ^C2 D G B d c3',
-		'B G A B A ^F G A G E ^F G4',
-		'B d c B A c B A G B A ^F4 G'
+		'B G A B A ^F G A G E ^F G4 z',
+		'B d c B A c B A G B A ^F4 G z2'
 	],
-	melody = [], i;
+	melody = [], i, m;
 
 	melody.push(parts[0], parts[1], parts[0], parts[2], parts[0]);
 	for (i = 0; i < 10; i++) {
-		melody.push(parts[Math.max(0, Math.floor(Math.random() * 4) - 1)]);
+		m = parts[Math.max(0, Math.floor(Math.random() * 4) - 1)];
+		if (Math.random() < 0.3) {
+			m = m.split(' ').reverse().join(' ');
+		}
+		melody.push(m);
 	}
 
-	init([[melody.join(' '), cMajorOctaveLower, 0.2]], 40 / 100); //20 .. 60
+	init([[melody.join(' '), cMajorOctaveLower, 0.2]]);
 }
 
 function generateSound (freq, incr, delay, times, vol, type) {
@@ -190,50 +212,32 @@ function playSound (sound) {
 		return;
 	}
 	switch (sound) {
-	case 'move': //Landen
+	case 'cat0': //start of jump
+		generateSound(150, 30, 10, 20, 0.15);
+		break;
+	case 'cat1': //end of jump
 		generateSound(100, -10, 15, 15, 0.7, 2);
 		break;
-	case 'open':
-		generateSound(220, 15, 60, 15, 0.3, 2);
-		break;
-	case 'close':
-		generateSound(440, -15, 60, 15, 0.3, 2);
-		break;
-	case 'teleport':
-		generateSound(150, 30, 2, 20, 0.5, 2);
-		setTimeout(function () {
-			generateSound(150, 30, 2, 20, 0.5, 2);
-		}, 150);
-		break;
-	case 'switch':
-		generateSound(750, -30, 5, 20, 0.25);
-		setTimeout(function () {
-			generateSound(150, 30, 5, 20, 0.25);
-		}, 100);
-		break;
-	case 'win':
-		generateSound(510, 0, 15, 20, 0.1);
-		setTimeout(function () {
-			generateSound(2600, 1, 10, 50, 0.2);
-		}, 80);
-		break;
-	case 'die': //Drohne
+	case 'end1':
 		generateSound(100, -10, 10, 25, 0.5);
 		generateSound(125, -5, 20, 45, 0.1, 1);
 		generateSound(40, 2, 20, 20, 1, 2);
 		generateSound(200, -4, 10, 100, 0.25, 2);
 		break;
-	case 'jump': //Springen
-		generateSound(150, 30, 15, 20, 0.3);
+	case 'end2':
+		generateSound(750, -30, 5, 20, 0.25);
+		setTimeout(function () {
+			generateSound(150, 30, 5, 20, 0.25);
+		}, 100);
 		break;
-	case 'pew': //Wasser
-		generateSound(920, -80, 20, 15, 0.3);
+	case 'end3':
+		generateSound(440, -15, 35, 15, 0.3, 2);
 		break;
-	case 'blow': //Dornen
-		generateSound(120, -6, 20, 15, 0.1, 1);
-		generateSound(40, -2, 20, 25, 1, 2);
-		generateSound(60, 10, 15, 15, 0.1, 1);
-		generateSound(160, -5, 20, 30, 0.1, 3);
+	case 'end-1':
+		generateSound(510, 0, 15, 20, 0.1);
+		setTimeout(function () {
+			generateSound(2600, 1, 10, 50, 0.2);
+		}, 80);
 	}
 }
 

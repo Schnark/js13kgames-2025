@@ -12,6 +12,7 @@ var WIDTH = 100,
 	JUMP = 0.3,
 	JUMP_TIME = 200,
 	ROTATION_MAX = 0.0007,
+	JUMP_START_TIME = 50,
 	TURNING_TIME = 200;
 
 function Cat (level) {
@@ -243,7 +244,7 @@ Cat.prototype.walk = function (left, right, jump, dt) {
 		this.curve0 = null;
 		this.curve1 = null;
 		this.jumpTime = JUMP_TIME;
-		this.noRotTime = 3 * Math.abs(this.vy) / JUMP * JUMP_TIME;
+		this.noRotTime = Math.max(JUMP_START_TIME, 2 * Math.abs(this.vy) / JUMP * JUMP_TIME);
 		this.fly(left, right, jump, dt);
 		return;
 	}
@@ -458,13 +459,15 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	);
 	this.x0 = pos.x;
 	this.y0 = pos.y;
-	this.curve0 = pos.curve;
+	if (!jump && !this.noRotTime) {
+		this.curve0 = pos.curve;
+	}
 	if (pos.hitSide) {
 		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
 		this.vx = 0;
 		this.walkPos += dt * Math.abs(this.vy);
 	}
-	if (pos.hitCurve) {
+	if (pos.hitCurve && !this.noRotTime) {
 		this.vy = 0;
 	}
 	pos = this.catchCurve(
@@ -482,12 +485,14 @@ Cat.prototype.fly = function (left, right, jump, dt) {
 	}
 	this.x1 = pos.x;
 	this.y1 = pos.y;
-	this.curve1 = pos.curve;
+	if (!jump && !this.noRotTime) {
+		this.curve1 = pos.curve;
+	}
 	if (pos.hitSide) {
 		this.jumpTime = Math.max(this.jumpTime, JUMP_TIME / 2);
 		this.vx = 0;
 	}
-	if (pos.hitCurve) {
+	if (pos.hitCurve && !this.noRotTime) {
 		this.vy = 0;
 	}
 	if (this.curve0 && this.curve1) {

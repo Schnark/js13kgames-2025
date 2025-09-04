@@ -56,9 +56,10 @@ Level.prototype.run = function (canvas, onMsg, onEnd) {
 	}
 
 	function move (dt) {
-		while (dt > 50) {
-			dt -= 50;
-			moveStep(50);
+		var MAX_DT = 50;
+		while (dt > MAX_DT) {
+			dt -= MAX_DT;
+			moveStep(MAX_DT);
 			if (end) {
 				return;
 			}

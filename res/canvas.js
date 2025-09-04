@@ -76,7 +76,7 @@ Canvas.prototype.showText = function () {
 	this.ctx.textAlign = 'center';
 	this.ctx.textBaseline = 'top';
 	this.ctx.font = '30px sans-serif';
-	this.ctx.fillText(this.text, this.w / 2, 15, this.w);
+	this.ctx.fillText(this.text, this.w / 2, 15, this.w - 80 / this.s);
 };
 
 return Canvas;

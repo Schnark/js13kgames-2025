@@ -10,7 +10,7 @@ for (i = 0; i < l - 1; i++) {
 }
 levels[l - 1][0].next = 'End';
 
-canvas = new Canvas(document.getElementById('c'), 700, 700, 1400); //first 700 = nominal height of level
+canvas = new Canvas(document.getElementById('c'), 700, 900, 1400); //700 = nominal height of level
 
 state = storage.get({
 	level: 0,

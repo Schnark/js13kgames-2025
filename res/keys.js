@@ -53,6 +53,7 @@ function handler (e) {
 		if (e.type === 'keydown') {
 			audioCheckbox.checked = !audioCheckbox.checked;
 			audioCheckbox.dispatchEvent(new Event('change'));
+			e.preventDefault();
 		}
 	} else if (action) {
 		keys[action] = e.type === 'keydown';
@@ -63,6 +64,11 @@ function handler (e) {
 audioCheckbox = document.getElementById('a');
 document.addEventListener('keydown', handler);
 document.addEventListener('keyup', handler);
+document.addEventListener('blur', function () {
+	keys.left = false;
+	keys.right = false;
+	keys.jump = false;
+});
 
 return keys;
 })();

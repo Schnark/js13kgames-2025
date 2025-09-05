@@ -229,56 +229,56 @@ levels = [
 		[[500, 1200], [1600, 2500], [1750, 2650]],
 		[850, 2050]
 	)],
-	//many platforms
+	//platforms over water
 	[new Level(
 		new Curve([
 			{x: 0, y: 600},
-			{x: 1000, y: 600, xc: 500, yc: 550},
-			{x: 2000, y: 600, xc: 1500},
-			{x: 3000, y: 600, xc: 2500},
-			{x: 4000, y: 600, xc: 3500},
-			{x: 5000, y: 600, xc: 4500}
+			{x: 300, y: 600},
+			{x: 301, y: 620},
+			{x: 2999, y: 620},
+			{x: 3000, y: 600},
+			{x: 3500, y: 600}
 		]),
 		[
 			new Block(
-				new Curve([{x: 350, y: 450}, {x: 550, y: 450, xc: 450, yc: 430}]),
-				new Curve([{x: 350, y: 520}, {x: 550, y: 520, xc: 450, yc: 550}]),
+				new Curve([{x: 300, y: 600}, {x: 3000, y: 600}]),
+				new Curve([{x: 300, y: 650}, {x: 3000, y: 650, xc: 1650, yc: 700}]),
+				3
+			),
+			new Block(
+				new Curve([{x: 400, y: 500}, {x: 700, y: 500}]),
+				new Curve([{x: 400, y: 550}, {x: 700, y: 550, xc: 550, yc: 600}]),
 				0
 			),
 			new Block(
-				new Curve([{x: 750, y: 250}, {x: 950, y: 250, xc: 850, yc: 230}]),
-				new Curve([{x: 750, y: 320}, {x: 950, y: 320, xc: 850, yc: 350}]),
+				new Curve([{x: 900, y: 350}, {x: 1150, y: 350}]),
+				new Curve([{x: 900, y: 450}, {x: 1150, y: 450}]),
+				1
+			),
+			new Block(
+				new Curve([{x: 1400, y: 200}, {x: 1600, y: 200, xc: 1500, yc: 180}]),
+				new Curve([{x: 1400, y: 300}, {x: 1600, y: 300, xc: 1500, yc: 350}]),
 				0
 			),
 			new Block(
-				new Curve([{x: 1250, y: 150}, {x: 1450, y: 150, xc: 1350, yc: 130}]),
-				new Curve([{x: 1250, y: 220}, {x: 1450, y: 220, xc: 1350, yc: 250}]),
-				0
-			),
-			new Block(
-				new Curve([{x: 1750, y: 150}, {x: 1950, y: 150, xc: 1850, yc: 130}]),
-				new Curve([{x: 1750, y: 220}, {x: 1950, y: 220, xc: 1850, yc: 250}]),
-				0
-			),
-			new Block(
-				new Curve([{x: 2350, y: 150}, {x: 2550, y: 150, xc: 2450, yc: 130}]),
-				new Curve([{x: 2350, y: 220}, {x: 2550, y: 220, xc: 2450, yc: 250}]),
-				0
-			),
-			new Block(
-				new Curve([{x: 2850, y: 150}, {x: 3000, y: 150, xc: 2925, yc: 130}]),
-				new Curve([{x: 2850, y: 220}, {x: 3000, y: 220, xc: 2925, yc: 250}]),
-				0
-			),
-			new Block(
-				new Curve([{x: 3350, y: 150}, {x: 3500, y: 150, xc: 3425, yc: 130}]),
-				new Curve([{x: 3350, y: 220}, {x: 3500, y: 220, xc: 3425, yc: 250}]),
-				0
-			),
-			new Block(
-				new Curve([{x: 3600, y: 200}, {x: 3700, y: 200}]),
-				new Curve([{x: 3600, y: 650}, {x: 3700, y: 650}]),
+				new Curve([{x: 1750, y: 150}, {x: 1850, y: 150, xc: 1800, yc: 100}]),
+				new Curve([{x: 1750, y: 180}, {x: 1850, y: 180, xc: 1800, yc: 230}]),
 				2
+			),
+			new Block(
+				new Curve([{x: 1750, y: 0}, {x: 1850, y: 0, xc: 1800, yc: -50}]),
+				new Curve([{x: 1750, y: 30}, {x: 1850, y: 30, xc: 1800, yc: 80}]),
+				2
+			),
+			new Block(
+				new Curve([{x: 1850, y: 500}, {x: 2000, y: 500}]),
+				new Curve([{x: 1850, y: 600}, {x: 2000, y: 600}]),
+				1
+			),
+			new Block(
+				new Curve([{x: 2100, y: 250}, {x: 2400, y: 200, xc: 2300, yc: 200}]),
+				new Curve([{x: 2100, y: 450}, {x: 2400, y: 450}]),
+				0
 			)
 		]
 	)],
@@ -393,56 +393,56 @@ levels = [
 		],
 		[800, 2000, 2800]
 	)],
-	//platforms over water
+	//many platforms
 	[new Level(
 		new Curve([
 			{x: 0, y: 600},
-			{x: 300, y: 600},
-			{x: 301, y: 620},
-			{x: 2999, y: 620},
-			{x: 3000, y: 600},
-			{x: 3500, y: 600}
+			{x: 1000, y: 600, xc: 500, yc: 550},
+			{x: 2000, y: 600, xc: 1500},
+			{x: 3000, y: 600, xc: 2500},
+			{x: 4000, y: 600, xc: 3500},
+			{x: 5000, y: 600, xc: 4500}
 		]),
 		[
 			new Block(
-				new Curve([{x: 300, y: 600}, {x: 3000, y: 600}]),
-				new Curve([{x: 300, y: 650}, {x: 3000, y: 650, xc: 1650, yc: 700}]),
-				3
-			),
-			new Block(
-				new Curve([{x: 400, y: 500}, {x: 700, y: 500}]),
-				new Curve([{x: 400, y: 550}, {x: 700, y: 550, xc: 550, yc: 600}]),
+				new Curve([{x: 350, y: 450}, {x: 550, y: 450, xc: 450, yc: 430}]),
+				new Curve([{x: 350, y: 520}, {x: 550, y: 520, xc: 450, yc: 550}]),
 				0
 			),
 			new Block(
-				new Curve([{x: 900, y: 350}, {x: 1150, y: 350}]),
-				new Curve([{x: 900, y: 450}, {x: 1150, y: 450}]),
-				1
-			),
-			new Block(
-				new Curve([{x: 1400, y: 200}, {x: 1600, y: 200, xc: 1500, yc: 180}]),
-				new Curve([{x: 1400, y: 300}, {x: 1600, y: 300, xc: 1500, yc: 350}]),
+				new Curve([{x: 750, y: 250}, {x: 950, y: 250, xc: 850, yc: 230}]),
+				new Curve([{x: 750, y: 320}, {x: 950, y: 320, xc: 850, yc: 350}]),
 				0
 			),
 			new Block(
-				new Curve([{x: 1750, y: 150}, {x: 1850, y: 150, xc: 1800, yc: 100}]),
-				new Curve([{x: 1750, y: 180}, {x: 1850, y: 180, xc: 1800, yc: 230}]),
+				new Curve([{x: 1250, y: 150}, {x: 1450, y: 150, xc: 1350, yc: 130}]),
+				new Curve([{x: 1250, y: 220}, {x: 1450, y: 220, xc: 1350, yc: 250}]),
+				0
+			),
+			new Block(
+				new Curve([{x: 1750, y: 150}, {x: 1950, y: 150, xc: 1850, yc: 130}]),
+				new Curve([{x: 1750, y: 220}, {x: 1950, y: 220, xc: 1850, yc: 250}]),
+				0
+			),
+			new Block(
+				new Curve([{x: 2350, y: 150}, {x: 2550, y: 150, xc: 2450, yc: 130}]),
+				new Curve([{x: 2350, y: 220}, {x: 2550, y: 220, xc: 2450, yc: 250}]),
+				0
+			),
+			new Block(
+				new Curve([{x: 2850, y: 150}, {x: 3000, y: 150, xc: 2925, yc: 130}]),
+				new Curve([{x: 2850, y: 220}, {x: 3000, y: 220, xc: 2925, yc: 250}]),
+				0
+			),
+			new Block(
+				new Curve([{x: 3350, y: 150}, {x: 3500, y: 150, xc: 3425, yc: 130}]),
+				new Curve([{x: 3350, y: 220}, {x: 3500, y: 220, xc: 3425, yc: 250}]),
+				0
+			),
+			new Block(
+				new Curve([{x: 3600, y: 200}, {x: 3700, y: 200}]),
+				new Curve([{x: 3600, y: 650}, {x: 3700, y: 650}]),
 				2
-			),
-			new Block(
-				new Curve([{x: 1750, y: 0}, {x: 1850, y: 0, xc: 1800, yc: -50}]),
-				new Curve([{x: 1750, y: 30}, {x: 1850, y: 30, xc: 1800, yc: 80}]),
-				2
-			),
-			new Block(
-				new Curve([{x: 1850, y: 500}, {x: 2000, y: 500}]),
-				new Curve([{x: 1850, y: 600}, {x: 2000, y: 600}]),
-				1
-			),
-			new Block(
-				new Curve([{x: 2100, y: 250}, {x: 2400, y: 200, xc: 2300, yc: 200}]),
-				new Curve([{x: 2100, y: 450}, {x: 2400, y: 450}]),
-				0
 			)
 		]
 	)],
